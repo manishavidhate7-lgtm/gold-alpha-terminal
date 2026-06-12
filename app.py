@@ -1,46 +1,58 @@
 import streamlit as st
 import feedparser
-import os
-import urllib.request
 import json
+import urllib.request
+from bs4 import BeautifulSoup
 from google.genai import Client
 from deep_translator import GoogleTranslator
-from bs4 import BeautifulSoup
 
-# =====================================================================
-# 1. फिक्स्ड क्लाइंट सेटअप (इसे ध्यान से देखें)
-# =====================================================================
+st.set_page_config(layout="wide")
+st.title("XAU/USD Alpha Terminal")
+
+# --- 1. Client Setup ---
 def get_client():
     try:
-        # सीक्रेट्स से की लें
-        api_key = st.secrets["GEMINI_API_KEY"]
-        return Client(api_key=api_key)
-    except Exception as e:
+        return Client(api_key=st.secrets["GEMINI_API_KEY"])
+    except:
         return None
 
 client = get_client()
 
-# =====================================================================
-# 2. अनुवाद और एआई फंक्शन
-# =====================================================================
-def translate_to_hindi(text):
+# --- 2. News Fetching ---
+@st.cache_data(ttl=60)
+def fetch_news():
     try:
-        return GoogleTranslator(source='auto', target='hi').translate(text)
+        feed = feedparser.parse("https://finance.yahoo.com/rss/headline?s=GC=F")
+        return feed.entries[:3]
+    except:
+        return []
+
+# --- 3. Simple Safe Translation ---
+def safe_translate(text):
+    try:
+        return GoogleTranslator(source='auto', target='hi').translate(text[:500])
     except:
         return text
 
-def get_ai_analysis(title, content):
-    if not client:
-        return "AI API Key missing or error."
-    
-    try:
-        prompt = f"Analyze this financial news: {title}. {content}. Give 3 short points."
-        response = client.models.generate_content(model='gemini-2.0-flash', contents=prompt)
-        return translate_to_hindi(response.text)
-    except Exception as e:
-        return "विश्लेषण अभी उपलब्ध नहीं है।"
+# --- 4. Main UI ---
+news = fetch_news()
 
-# =====================================================================
-# 3. बाकी कोड... (पुराना वाला ही रखें)
-# =====================================================================
-# यहाँ अपना फीड और लेआउट वाला कोड पेस्ट करें
+if not news:
+    st.write("अभी कोई न्यूज़ लोड नहीं हो पाई है।")
+else:
+    for item in news:
+        st.subheader(safe_translate(item.title))
+        
+        # एआई एनालिसिस के लिए सेफ कॉल
+        if client:
+            try:
+                response = client.models.generate_content(
+                    model='gemini-2.0-flash', 
+                    contents=f"Summarize: {item.title}"
+                )
+                st.write(safe_translate(response.text))
+            except Exception as e:
+                st.write("एआई विश्लेषण में तकनीकी समस्या।")
+        else:
+            st.write("API Key नहीं मिली।")
+        st.divider()
