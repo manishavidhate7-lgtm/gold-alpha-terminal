@@ -16,15 +16,11 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# मोबाइल और डेस्कटॉप दोनों स्क्रीन के लिए परफेक्ट CSS रिस्पॉन्सिव स्टाइलिंग
 st.markdown("""
 <style>
-    /* ओवरऑल फॉन्ट और बैकग्राउंड पॉलिश */
     html, body, [data-testid="stAppViewContainer"] {
         background-color: #fafbfc;
     }
-    
-    /* एसएमसी लेवल्स के कार्ड्स - मोबाइल पर भी परफेक्ट दिखेंगे */
     .metric-card { 
         background-color: #ffffff; 
         padding: 12px; 
@@ -44,7 +40,6 @@ st.markdown("""
     .sell-text { color: #f23645; font-weight: 800; font-size: 16px; }
     .neutral-text { color: #64748b; font-weight: 800; font-size: 16px; }
     
-    /* मोबाइल स्क्रीन के लिए कंटेनर पैडिंग फिक्स */
     @media (max-width: 768px) {
         .block-container {
             padding-top: 1rem !important;
@@ -64,7 +59,6 @@ st.title("⚡ XAU/USD Alpha Terminal v2")
 # =====================================================================
 # 2. CONFIGURE THE OFFICIAL GOOGLE GEMINI CLIENT (🔒 PRODUCTION SECURE)
 # =====================================================================
-# लाइव वेबसाइट के लिए पूरी तरह सुरक्षित तरीका - GitHub अब इसे ब्लॉक नहीं करेगा
 if "GEMINI_API_KEY" in st.secrets:
     GOOGLE_API_KEY = st.secrets["GEMINI_API_KEY"]
 else:
@@ -72,7 +66,6 @@ else:
 
 try:
     if not GOOGLE_API_KEY:
-        # अगर की (Key) नहीं मिलेगी तो यूजर को सचेत करेगा लेकिन क्रैश नहीं होगा
         client = None
     else:
         client = genai.Client(api_key=GOOGLE_API_KEY)
@@ -125,7 +118,7 @@ def fetch_gold_news():
     return news_items
 
 # =====================================================================
-# 5. TOP ROW: LIVE SPOT PRICE & HTF ALIGNMENT (RESPONSIVE COLUMNS)
+# 5. TOP ROW: LIVE SPOT PRICE & HTF ALIGNMENT
 # =====================================================================
 top_col1, top_col2 = st.columns([1, 1])
 
@@ -152,7 +145,7 @@ with top_col2:
 st.write("---")
 
 # =====================================================================
-# 6. AI TRADER ENGINE & DYNAMIC NEWS INTERPRETER (LAYMAN LANGUAGE)
+# 6. AI TRADER ENGINE & DYNAMIC NEWS INTERPRETER (5 NEWS + MULTI PAIR FIX)
 # =====================================================================
 @st.cache_data(ttl=1800)
 def generate_pro_ai_analysis(news_data, live_spot):
@@ -192,20 +185,22 @@ def generate_pro_ai_analysis(news_data, live_spot):
     [Warning to check lower timeframe CHoCH before entry in Hindi.]
     """
 
+    # 🎯 प्रॉम्प्ट में साफ़ निर्देश: सभी 5 खबरों का विश्लेषण और बाकी मेजर पेयर्स का भी नाम
     prompt_interpreter = f"""
-    You are an expert global macro analyst. Take these top news stories and create a layman breakdown.
-    For each major news item, format it strictly like this example structure, written completely in Hindi script (Devanagari font). Make sure to state explicitly if the market impact is BULLISH (तेजी) or BEARISH (मंदी) so any layman can understand instantly.
+    You are an expert global macro analyst. You MUST analyze ALL 5 stories provided in the list below sequentially. Do not skip any story.
+    For each news item, write strictly in Hindi script (Devanagari font) and explicitly mention laymen-friendly direction (🚀 BULLISH / 📉 BEARISH / ⚪ NEUTRAL) for Gold, Indian Market, and other Major Forex Pairs (like USDJPY, EURUSD, GBPUSD based on the macro context).
 
     ### 🔍 AI News Interpreter & Market Impact Panel
 
-    **📌 न्यूज़ हेडलाइन:** [Exact or summarized headline]
-    - **आसान शब्दों में मतलब:** [Explain in very simple Hindi what this news means for a common person]
-    - **Forex (Gold/Dollar) पर असर:** [🚀 BULLISH (तेजी) / 📉 BEARISH (मंदी) / ⚪ NEUTRAL (कोई असर नहीं) - Explain briefly in simple Hindi]
-    - **Indian Market (Nifty) पर असर:** [🚀 BULLISH (तेजी) / 📉 BEARISH (मंदी) / ⚪ NEUTRAL (कोई असर नहीं) - Explain briefly in simple Hindi]
+    **📌 न्यूज़ हेडलाइन:** [Exact headline from the list]
+    - **आसान शब्दों में मतलब:** [Explain in simple Hindi what this news means]
+    - **Forex (Gold/Dollar) पर असर:** [🚀 BULLISH (तेजी) / 📉 BEARISH (मंदी) / ⚪ NEUTRAL - Simple Hindi explanation]
+    - **Other Major Pairs पर असर:** [State specific pairs like USDJPY, EURUSD, or GBPUSD and mark them 🚀 BULLISH or 📉 BEARISH with a 1-line reason in simple Hindi]
+    - **Indian Market (Nifty/Bank Nifty) पर असर:** [🚀 BULLISH (तेजी) / 📉 BEARISH (मंदी) / ⚪ NEUTRAL - Simple Hindi explanation]
     - **असर का लेवल (Impact Level):** [🔴 High / 🟡 Medium / 🟢 Low]
 
     ---
-    (Repeat the above structure block for the top 3 critical stories from the list below)
+    (Generate exactly 5 blocks matching the 5 stories below)
 
     Stories list:
     {context_payload}
@@ -230,15 +225,18 @@ def generate_pro_ai_analysis(news_data, live_spot):
 - **Take Profit 1 (TP1):** {live_spot - 10:.2f}
         """
         
-        fallback_interp = "### 🔍 AI News Interpreter & Market Impact Panel\n\n"
-        for item in news_data[:3]:
+        # 🎯 फॉलबैक इंजन में भी अब 5 न्यूज़ लूप और नए पेयर्स का पूरा सपोर्ट डाल दिया है
+        fallback_interp = "### 🔍 AI News Interpreter & Market Impact Panel (Dynamic Flow)\n\n"
+        for item in news_data[:5]:
             is_high = "High" in item["impact"]
             gold_imp = "📉 BEARISH (मंदी) - डॉलर मजबूत होने से सोने के दाम गिर सकते हैं।" if is_high else "🚀 BULLISH (तेजी) - सोने में खरीदार एक्टिव हो सकते हैं।"
-            nifty_imp = "📉 BEARISH (मंदी) - भारतीय बाज़ारों में थोड़ी प्रॉफिट बुकिंग आ सकती है।" if is_high else "⚪ NEUTRAL (कोई खास असर नहीं)।"
+            pairs_imp = "🚀 USDJPY BULLISH (डॉलर मजबूत) | 📉 EURUSD BEARISH (यूरो कमजोर)" if is_high else "📉 USDJPY BEARISH (येन मजबूत) | 🚀 GBPUSD BULLISH"
+            nifty_imp = "📉 BEARISH (मंदी) - भारतीय बाज़ारों में थोड़ी गिरावट आ सकती है।" if is_high else "⚪ NEUTRAL (कोई खास असर नहीं)।"
             
             fallback_interp += f"**📌 न्यूज़ हेडलाइन:** {item['title']}\n"
-            fallback_interp += f"- **आसान शब्दों में मतलब:** यह खबर सीधे बड़े देशों के केंद्रीय बैंकों और ब्याज दरों से जुड़ी है, जिसका सीधा असर बड़े इन्वेस्टर के पैसों के मूवमेंट पर पड़ता है।\n"
+            fallback_interp += f"- **आसान शब्दों में मतलब:** वैश्विक स्तर पर लिक्विडिटी और सेंट्रल बैंक की नीतियों से जुड़ा हुआ मुख्य अपडेट।\n"
             fallback_interp += f"- **Forex (Gold/Dollar) पर असर:** {gold_imp}\n"
+            fallback_interp += f"- **Other Major Pairs पर असर:** {pairs_imp}\n"
             fallback_interp += f"- **Indian Market (Nifty) पर असर:** {nifty_imp}\n"
             fallback_interp += f"- **असर का लेवल (Impact Level):** {item['impact']}\n\n---\n\n"
             
@@ -277,12 +275,11 @@ with col2:
     live_spot_value = get_live_gold_price_backup()
     static_news = fetch_gold_news()
     
-    # यदि चाबी अभी तक सेट नहीं की गई है, तो चेतावनी पैनल दिखाएं
     if not client:
         st.warning("⚠️ सर्वर तिजोरी (Secrets) में 'GEMINI_API_KEY' डालना बाकी है। अभी बैकएंड फॉलबैक डेटा का उपयोग किया जा रहा है।")
     
     if static_news:
-        with st.spinner("जेमिनी प्रो इंजन लाइव लेवल्स कैलकुलेट कर रहा है..."):
+        with st.spinner("जेमिनी प्रो इंजन लाइव लेवल्स और सभी 5 खबरों का डीप एनालिसिस कैलकुलेट कर रहा है..."):
             ai_main_output, ai_interpreter_output = generate_pro_ai_analysis(static_news, live_spot_value)
             
             st.markdown(ai_main_output)
