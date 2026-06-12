@@ -20,7 +20,6 @@ def get_single_news_impact(news_title):
 # 3. UI LAYOUT
 st.title("⚡ Wolf Alpha Pro Terminal | Live")
 
-# Row 1: Chart, Sentiment, and Calendar
 col_left, col_mid, col_right = st.columns([1.5, 1, 1])
 
 with col_left:
@@ -38,19 +37,27 @@ with col_right:
 
 st.write("---")
 
-# Row 2: Currency Heatmap
+# 4. FIXED CURRENCY HEATMAP
 st.markdown("### 🗺️ Currency Strength Heatmap")
 components.html("""
-<div class="tradingview-widget-container">
-  <script type="text/javascript" src="https://s.tradingview.com/external-embedding/embed-widget-forex-heat-map.js" async>
-  {"width": "100%", "height": 400, "currencies": ["EUR", "USD", "JPY", "GBP", "CHF", "AUD", "CAD", "NZD", "INR"], "isTransparent": false, "colorTheme": "light"}
+<div class="tradingview-widget-container" id="tv_heatmap">
+  <div class="tradingview-widget-container__widget"></div>
+  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-forex-heat-map.js" async>
+  {
+  "width": "100%",
+  "height": 400,
+  "currencies": ["EUR", "USD", "JPY", "GBP", "CHF", "AUD", "CAD", "NZD", "INR"],
+  "isTransparent": false,
+  "colorTheme": "light",
+  "locale": "en"
+  }
   </script>
 </div>
 """, height=420)
 
 st.write("---")
 
-# Row 3: News
+# 5. NEWS SECTION
 st.header("📰 Live Market News & AI Analyser")
 sources = ["https://www.investing.com/rss/news_14.rss", "https://www.fxstreet.com/rss"]
 for url in sources:
@@ -62,6 +69,6 @@ for url in sources:
                 if st.button("Analyze", key=item.title):
                     with st.spinner("AI analyzing..."): st.markdown(get_single_news_impact(item.title))
 
-# 4. AUTO-REFRESH
+# 6. AUTO-REFRESH
 time.sleep(60)
 st.rerun()
