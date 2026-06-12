@@ -2,13 +2,9 @@ import streamlit as st
 import feedparser
 import streamlit.components.v1 as components
 import time
-import urllib.request
-import json
 from groq import Groq
 
-# =====================================================================
 # 1. PAGE SETUP
-# =====================================================================
 st.set_page_config(page_title="XAUUSD Alpha Terminal v2", layout="wide", initial_sidebar_state="collapsed")
 
 # CSS Styling
@@ -24,34 +20,30 @@ st.markdown("""
 
 st.title("⚡ XAU/USD Alpha Terminal v2")
 
-# =====================================================================
-# 2. GROQ CLIENT SETUP
-# =====================================================================
-# यहाँ अपनी असली API Key डालें या Secrets का उपयोग करें
+# 2. GROQ SETUP
 client = Groq(api_key="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")
 
-# =====================================================================
-# 3. DATA FUNCTIONS
-# =====================================================================
-def get_live_gold_price():
-    return 2385.0 # आप इसे अपनी लाइव API से रिप्लेस कर सकते हैं
-
-@st.cache_data(ttl=60)
-def fetch_gold_news():
-    rss_url = "https://www.investing.com/rss/news_14.rss"
-    feed = feedparser.parse(rss_url)
-    return feed.entries[:5]
-
-# =====================================================================
-# 4. AI ENGINE (GROQ VERSION)
-# =====================================================================
+# 3. AI ENGINE WITH PROMPT
 def get_ai_analysis(live_spot):
     prompt = f"""
-    You are an expert XAUUSD trader. Current price: {live_spot}. 
-    Provide response in Hindi (Devanagari script).
-    1. Dynamic Intraday Key Levels (PDH, PDL, R1, S1).
-    2. Live Trade Setup (Bias, Entry, SL, TP, RR).
-    3. AI News Interpreter with impact on Gold/Indian Market.
+    You are an expert XAUUSD trader. Current price: {live_spot}.
+    Return output EXACTLY in Hindi (Devanagari script) using this layout:
+
+    ### 📋 Dynamic Intraday Key Levels (SMC Grid)
+    - **PDH (Previous Day High):** Calculate levels based on {live_spot}
+    - **PDL (Previous Day Low):** Calculate levels based on {live_spot}
+    - **Resistance 1 (R1):** Calculate levels based on {live_spot}
+    - **Support 1 (S1):** Calculate levels based on {live_spot}
+
+    ### 🎯 Live Trade Setup Section (Actionable)
+    - **Bias:** [BUY/SELL]
+    - **Entry:** {live_spot}
+    - **SL:** [Price]
+    - **TP:** [Price]
+    - **RR:** [Ratio]
+
+    ### 🔍 AI News Interpreter & Market Impact Panel
+    - Explain news impact in simple Hindi.
     """
     completion = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
@@ -59,15 +51,19 @@ def get_ai_analysis(live_spot):
     )
     return completion.choices[0].message.content
 
-# =====================================================================
-# 5. UI LAYOUT
-# =====================================================================
+# 4. UI LAYOUT
 top_col1, top_col2 = st.columns([1, 1])
 
 with top_col1:
     st.markdown("### 🚀 XAU/USD Live Spot Price")
-    # TradingView Ticker Here
-    st.info("Live Chart Placeholder") 
+    components.html("""
+    <div class="tradingview-widget-container">
+      <div class="tradingview-widget-container__widget"></div>
+      <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>
+      {"symbol": "OANDA:XAUUSD", "width": "100%", "isTransparent": false, "colorTheme": "light", "locale": "en"}
+      </script>
+    </div>
+    """, height=130)
 
 with top_col2:
     st.markdown("### 📊 HTF Alignment")
@@ -83,7 +79,8 @@ col1, col2 = st.columns([1, 1], gap="large")
 
 with col1:
     st.header("📰 Live Alpha News Flow")
-    for item in fetch_gold_news():
+    rss_url = "https://www.investing.com/rss/news_14.rss"
+    for item in feedparser.parse(rss_url).entries[:5]:
         with st.container(border=True):
             st.subheader(item.title)
             st.markdown(f"[Source Link]({item.link})")
@@ -93,6 +90,5 @@ with col2:
     if st.button("🔄 Reset & Refresh Terminal", type="primary"):
         st.rerun()
     
-    with st.spinner("Groq Llama-3.3 Analyzing..."):
-        analysis = get_ai_analysis(get_live_gold_price())
-        st.markdown(analysis)
+    with st.spinner("Analyzing Market..."):
+        st.markdown(get_ai_analysis(2385.0))
