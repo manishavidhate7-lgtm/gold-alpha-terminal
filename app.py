@@ -161,29 +161,58 @@ with top_col1:
 with top_col2:
     st.markdown("### 📊 HTF Alignment Meters")
     htf_cols = st.columns(4)
-    with htf_cols[0]: st.markdown('<div class="meter-card"><div class="timeframe-title">⏳ 5M</div><span class="sell-text">🔴 STRONG SELL</span><div class="meter-bar-bg"><div class="meter-fill-sell"></div></div></div>', unsafe_allow_html=True)
-    with htf_cols[1]: st.markdown('<div class="meter-card"><div class="timeframe-title">⏳ 15M</div><span class="sell-text">🔴 SELL</span><div class="meter-bar-bg"><div class="meter-fill-sell" style="width:65%;"></div></div></div>', unsafe_allow_html=True)
-    with htf_cols[2]: st.markdown('<div class="meter-card"><div class="timeframe-title">⏳ 1H</div><span class="neutral-text">⚪ NEUTRAL</span><div class="meter-bar-bg"><div class="meter-fill-neut"></div></div></div>', unsafe_allow_html=True)
-    with htf_cols[3]: st.markdown('<div class="meter-card"><div class="timeframe-title">⏳ 4H</div><span class="buy-text">🟢 BUY</span><div class="meter-bar-bg"><div class="meter-fill-buy"></div></div></div>', unsafe_allow_html=True)
+    with htf_cols[0]: st.markdown('<div class="metric-card"><div class="timeframe-title">⏳ 5M</div><span class="sell-text">🔴 STRONG SELL</span><div class="meter-bar-bg"><div class="meter-fill-sell"></div></div></div>', unsafe_allow_html=True)
+    with htf_cols[1]: st.markdown('<div class="metric-card"><div class="timeframe-title">⏳ 15M</div><span class="sell-text">🔴 SELL</span><div class="meter-bar-bg"><div class="meter-fill-sell" style="width:65%;"></div></div></div>', unsafe_allow_html=True)
+    with htf_cols[2]: st.markdown('<div class="metric-card"><div class="timeframe-title">⏳ 1H</div><span class="neutral-text">⚪ NEUTRAL</span><div class="meter-bar-bg"><div class="meter-fill-neut"></div></div></div>', unsafe_allow_html=True)
+    with htf_cols[3]: st.markdown('<div class="metric-card"><div class="timeframe-title">⏳ 4H</div><span class="buy-text">🟢 BUY</span><div class="meter-bar-bg"><div class="meter-fill-buy"></div></div></div>', unsafe_allow_html=True)
 
 st.write("---")
 
 # =====================================================================
-# 6. AI TRADER ENGINE & DYNAMIC NEWS INTERPRETER (PURE HINDI MANDATE)
+# 6. AI DESK ENGINE (🚨 INDIVIDUAL PIECE LOOP FOR GUARANTEED DIVERSITY)
 # =====================================================================
 @st.cache_data(ttl=60)
-def generate_pro_ai_analysis(news_data, live_spot):
+def generate_isolated_interpretation(title, content):
+    """🚨 यह फंक्शन सिर्फ एक सिंगल न्यूज़ लेता है, जिससे मिक्सिंग होना नामुमकिन है"""
     if not client:
-        return "ERROR_KEY_MISSING", "ERROR_KEY_MISSING"
+        return "AI Engine Offline"
         
+    prompt = f"""
+    You are an expert global macro analyst. Analyze the following SINGLE news story carefully.
+    You MUST output the analysis completely in Hindi Devnagari script (हिंदी भाषा).
+    Do not mention any other external stories. Print each section strictly on a new line.
+
+    **📌 न्यूज़ हेडलाइन:** {title}
+
+    📰 न्यूज़ का मुख्य सारांश: [Analyze the provided content and explain exactly what happened in 2-3 detailed sentences using pure Hindi script]
+
+    आसान शब्दों में मतलब: [Explain the macroeconomic structural meaning of this specific event in simple Hindi]
+
+    Forex (Gold/Dollar) पर असर: [🚀 BULLISH (तेजी) / 📉 BEARISH (मंदी) / ⚪ NEUTRAL - 1 line Hindi reason]
+
+    Other Major Pairs पर असर: [USDJPY, EURUSD, etc. direction with 1-line reason in Hindi]
+
+    Indian Market (Nifty/Bank Nifty) पर असर: [🚀 BULLISH / 📉 BEARISH / ⚪ NEUTRAL - 1 line Hindi explanation]
+    """
+    try:
+        response = client.models.generate_content(model='gemini-2.5-flash', contents=prompt)
+        return response.text
+    except:
+        return f"**📌 न्यूज़ हेडलाइन:** {title}\n\n📰 न्यूज़ का मुख्य सारांश: {content}\n\n⚪ विश्लेषण अस्थाई रूप से उपलब्ध नहीं है।"
+
+@st.cache_data(ttl=60)
+def generate_smc_grid(news_data, live_spot):
+    if not client:
+        return "SMC Matrix Offline"
+    
     context_payload = ""
     for idx, item in enumerate(news_data, 1):
-        context_payload += f"Story {idx} Title: {item['title']}\nStory {idx} Content: {item['summary']}\n\n"
+        context_payload += f"Headline {idx}: {item['title']}\n"
         
     prompt_main = f"""
     You are an expert global macro prop trader.
     Current actual live market spot price of XAU/USD Gold right now is: ${live_spot:.2f}.
-    Analyze data: {context_payload}
+    Market Context: {context_payload}
     Return output EXACTLY in Hindi script. Do not use English script.
 
     ### 📋 Dynamic Intraday Key Levels (SMC Grid)
@@ -198,61 +227,10 @@ def generate_pro_ai_analysis(news_data, live_spot):
     - **Stop Loss (SL):** [Logical SL]
     - **Take Profit 1 (TP1):** [Target 1]
     """
-
-    # 🚨 यहाँ प्रॉम्ट को कड़ाई से 'सिर्फ हिंदी' में सारांश देने के लिए री-प्रोग्राम किया गया है
-    prompt_interpreter = f"""
-    You are an expert global macro analyst. You MUST analyze ALL 5 stories provided in the context below sequentially.
-    CRITICAL MANDATE: Write the output completely in Hindi Devnagari script (हिंदी भाषा). Do not use English sentences.
-    Every section item inside the template block MUST be printed on a separate new line. Do not merge sentences.
-
-    ### 🔍 AI News Interpreter & Market Impact Panel
-
-    **📌 न्यूज़ हेडライン:** [Exact headline from the list]
-
-    📰 न्यूज़ का मुख्य सारांश: [Translate the core news idea to pure Hindi and generate a clean 2-3 sentence summary explaining exactly what happened in the story context]
-
-    आसान शब्दों में मतलब: [Explain the macro economic logic of this specific event in very simple Hindi]
-
-    Forex (Gold/Dollar) पर असर: [🚀 BULLISH (तेजी) / 📉 BEARISH (मंदी) / ⚪ NEUTRAL - Hindi explanation]
-
-    Other Major Pairs पर असर: [USDJPY, EURUSD, etc. direction with 1-line reason in Hindi]
-
-    Indian Market (Nifty/Bank Nifty) पर असर: [🚀 BULLISH / 📉 BEARISH / ⚪ NEUTRAL - Hindi explanation]
-
-    ---
-    (Generate exactly 5 blocks matching the 5 stories below, keeping double line breaks between points)
-
-    Data Context:
-    {context_payload}
-    """
-    
     try:
-        res_main = client.models.generate_content(model='gemini-2.5-flash', contents=prompt_main).text
-        res_interp = client.models.generate_content(model='gemini-2.5-flash', contents=prompt_interpreter).text
-        return res_main, res_interp
-    except Exception as e:
-        fallback_main = f"### 📋 Dynamic Intraday Key Levels\n- **Live Base Spot:** {live_spot:.2f}"
-        
-        fallback_blocks = []
-        for item in news_data[:5]:
-            is_high = "High" in item["impact"]
-            gold_imp = "📉 BEARISH (मंदी) - डॉलर इंडेक्स मजबूत होने से सोने पर दबाव।" if is_high else "🚀 BULLISH (तेजी) - सोने में सेफ-हेवन खरीदारी बढ़ने की उम्मीद।"
-            
-            block = f"""**📌 न्यूज़ हेडलाइन:** {str(item['title'])}
-
-📰 न्यूज़ का मुख्य सारांश: इस खबर के अनुसार वैश्विक बाज़ार के व्यापक आर्थिक समीकरणों (Macro-Economics) और लिक्विडिटी सेंटरों में बदलाव देखा जा रहा है, जिससे कमोडिटी बाज़ार सीधे प्रभावित हो सकते हैं।
-
-आसान शब्दों में मतलब: वैश्विक स्तर पर लिक्विडिटी में होने वाले बदलाव और व्यापक आर्थिक सेंटीमेंट्स का रीयल-टाइम अपडेट।
-
-Forex (Gold/Dollar) पर असर: {gold_imp}
-
-असर का लेवल (Impact Level): {str(item['impact'])}
-
----"""
-            fallback_blocks.append(block)
-            
-        fallback_interp = "### 🔍 AI News Interpreter & Market Impact Panel (Dynamic Flow)\n\n" + "\n\n".join(fallback_blocks)
-        return fallback_main, fallback_interp
+        return client.models.generate_content(model='gemini-2.5-flash', contents=prompt_main).text
+    except:
+        return f"### 📋 Dynamic Intraday Key Levels\n- **Live Base Spot:** {live_spot:.2f}"
 
 # =====================================================================
 # 7. RESPONSIVE DUAL-COLUMN LAYOUT
@@ -292,11 +270,19 @@ with col2:
     
     if static_news:
         with st.spinner("जेमिनी प्रो इंजन लाइव लेवल्स और सभी खबरों का शुद्ध हिंदी विश्लेषण कैलकुलेट कर रहा है..."):
-            ai_main_output, ai_interpreter_output = generate_pro_ai_analysis(static_news, live_spot_value)
             
+            # 1. पहले मेन लेवल्स लोड करें
+            ai_main_output = generate_smc_grid(static_news, live_spot_value)
             st.markdown(f'<div class="ai-box-container">', unsafe_allow_html=True)
             st.markdown(ai_main_output)
             st.write("---")
-            with st.container(border=True):
-                st.markdown(ai_interpreter_output)
+            
+            # 2. 🚨 यहाँ जादू है! हर न्यूज़ के लिए अलग से सेपरेट कॉल जा रही है जिससे डुप्लीकेशन नामुमकिन है
+            st.markdown("### 🔍 AI News Interpreter & Market Impact Panel")
+            
+            for item in static_news:
+                with st.container(border=True):
+                    single_interpretation = generate_isolated_interpretation(item['title'], item['summary'])
+                    st.markdown(single_interpretation)
+                    
             st.markdown('</div>', unsafe_allow_html=True)
