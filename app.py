@@ -6,6 +6,7 @@ import time
 import urllib.request
 import json
 import google.genai as genai
+from google.genai import types  # 🚨 सिस्टम कॉन्फ़िगरेशन के लिए जरूरी
 from bs4 import BeautifulSoup
 
 # =====================================================================
@@ -161,7 +162,7 @@ with top_col1:
 with top_col2:
     st.markdown("### 📊 HTF Alignment Meters")
     htf_cols = st.columns(4)
-    with htf_cols[0]: st.markdown('<div class="meter-card"><div class="timeframe-title">⏳ 5M</div><span class="sell-text">🔴 STRONG SELL</span><div class="meter-bar-bg"><div class="meter-fill-sell"></div></div></div>', unsafe_allow_html=True)
+    with htf_cols[0]: st.markdown('<div class="metric-card"><div class="timeframe-title">⏳ 5M</div><span class="sell-text">🔴 STRONG SELL</span><div class="meter-bar-bg"><div class="meter-fill-sell"></div></div></div>', unsafe_allow_html=True)
     with htf_cols[1]: st.markdown('<div class="metric-card"><div class="timeframe-title">⏳ 15M</div><span class="sell-text">🔴 SELL</span><div class="meter-bar-bg"><div class="meter-fill-sell" style="width:65%;"></div></div></div>', unsafe_allow_html=True)
     with htf_cols[2]: st.markdown('<div class="metric-card"><div class="timeframe-title">⏳ 1H</div><span class="neutral-text">⚪ NEUTRAL</span><div class="meter-bar-bg"><div class="meter-fill-neut"></div></div></div>', unsafe_allow_html=True)
     with htf_cols[3]: st.markdown('<div class="metric-card"><div class="timeframe-title">⏳ 4H</div><span class="buy-text">🟢 BUY</span><div class="meter-bar-bg"><div class="meter-fill-buy"></div></div></div>', unsafe_allow_html=True)
@@ -169,38 +170,40 @@ with top_col2:
 st.write("---")
 
 # =====================================================================
-# 6. AI DESK ENGINE (🚨 PURE HINDI FORCE DIRECTIVES)
+# 6. AI DESK ENGINE (🚨 SYSTEM INSTRUCTIONS FORCED HINDI LOGIC)
 # =====================================================================
 @st.cache_data(ttl=60)
 def generate_isolated_interpretation(title, content):
     if not client:
         return "AI Engine Offline"
         
-    # 🚨 पूरी तरह से हिंदी में री-राइट किया हुआ प्रॉम्ट स्ट्रक्चर ताकि कोई भी इंग्लिश आउटपुट न बचे
-    prompt = f"""
-    तुम एक अंतराष्ट्रीय मैक्रो इकोनॉमिक्स और प्रोप्रायटरी ट्रेडिंग डेस्क के मुख्य विश्लेषक हो। तुम्हें दी गई खबर का गहराई से विश्लेषण केवल और केवल शुद्ध हिंदी भाषा (देवनागरी लिपि) में करना है। अंग्रेजी वाक्यों का प्रयोग बिल्कुल न करें।
-
-    निम्नलिखित खबर का विश्लेषण नीचे दिए गए प्रारूप में करो। हर एक पॉइंट को बिल्कुल नई लाइन पर प्रिंट करना अनिवार्य है:
-
-    📌 न्यूज़ हेडलाइन: {title}
-
-    📰 न्यूज़ का मुख्य सारांश: इस खबर के मुख्य तथ्यों को समझकर 2-3 गहरे वाक्यों में समझाओ कि असल में क्या घटना हुई है और इसके पीछे के आर्थिक कारण क्या हैं।
-
-    आसान शब्दों में मतलब: इस जटिल खबर का आम भाषा में सरल आर्थिक मतलब समझाओ कि एक ट्रेडर के लिए इसका क्या महत्व है।
-
-    Forex (Gold/Dollar) पर असर: तेजी (BULLISH) या मंदी (BEARISH) या तटस्थ (NEUTRAL) लिखकर शुद्ध हिंदी में 1 लाइन में सोने और डॉलर पर इसका प्रभाव बताओ।
-
-    Other Major Pairs पर असर: विदेशी मुद्रा जोड़े जैसे USDJPY, EURUSD आदि की दिशा और उसका ठोस कारण हिंदी में लिखो।
-
-    Indian Market (Nifty/Bank Nifty) पर असर: भारतीय शेयर बाजार (निफ्टी और बैंक निफ्टी) पर होने वाला सीधा सकारात्मक या नकारात्मक असर हिंदी में लिखो।
-
-    खबर का मूल डेटा संदर्भ: {content}
-    """
+    prompt = f"Analyze this single news story. Headline: {title}. Content: {content}"
+    
+    # 🚨 मॉडल को सिस्टम लेवल पर मजबूर करना कि वो सिर्फ हिंदी बोलेगा
+    sys_instruction = (
+        "You are a global macro desk analyst. You MUST write your entire output using ONLY "
+        "Hindi script (Devanagari). Under no circumstances are you allowed to reply in English sentences. "
+        "Format your output strictly using these headers in Hindi:\n"
+        "📌 न्यूज़ हेडライン: [Headline in Hindi]\n"
+        "📰 न्यूज़ का मुख्य सारांश: [Summary in Hindi]\n"
+        "आसान शब्दों में मतलब: [Meaning in simple Hindi]\n"
+        "Forex (Gold/Dollar) पर असर: [Impact in Hindi]\n"
+        "Other Major Pairs पर असर: [Impact in Hindi]\n"
+        "Indian Market (Nifty/Bank Nifty) पर असर: [Impact in Hindi]"
+    )
+    
     try:
-        response = client.models.generate_content(model='gemini-2.5-flash', contents=prompt)
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                system_instruction=sys_instruction,
+                temperature=0.2  # क्रिएटिविटी कम ताकि निर्देशों का पालन पक्का हो
+            )
+        )
         return response.text
-    except:
-        return f"**📌 न्यूज़ हेडलाइन:** {title}\n\n📰 न्यूज़ का मुख्य सारांश: {content}\n\n⚪ विश्लेषण अस्थाई रूप से उपलब्ध नहीं है।"
+    except Exception as e:
+        return f"**📌 न्यूज़ हेडलाइन:** {title}\n\n📰 न्यूज़ का मुख्य सारांश: {content}\n\n⚪ विश्लेषण लोड नहीं हो पाया।"
 
 @st.cache_data(ttl=60)
 def generate_smc_grid(news_data, live_spot):
@@ -211,26 +214,33 @@ def generate_smc_grid(news_data, live_spot):
     for idx, item in enumerate(news_data, 1):
         context_payload += f"Headline {idx}: {item['title']}\n"
         
-    prompt_main = f"""
-    तुम एक वैश्विक स्तर के प्रियरिटी कमोडिटी ट्रेडर हो। तुम्हें सोने (Gold) के रीयल-टाइम लेवल्स हिंदी में देने हैं।
-    वर्तमान लाइव接收 मार्केट स्पॉट प्राइस: ${live_spot:.2f}.
-    बाजार का संदर्भ: {context_payload}
-    तुम्हारा पूरा जवाब देवनागरी हिंदी लिपि में होना अनिवार्य है।
-
-    ### 📋 लाइव इंट्राडे मुख्य लेवल्स (SMC ग्रिड)
-    - **PDH (पिछले दिन का उच्चतम स्तर):** ${live_spot + 12:.2f} के आसपास का स्तर।
-    - **PDL (पिछले दिन का न्यूनतम स्तर):** ${live_spot - 15:.2f} के आसपास का स्तर।
-    - **रेसिस्टेंस 1 (R1):** तार्किक रेसिस्टेंस स्तर लिखो।
-    - **सपोर्ट 1 (S1):** तार्किक सपोर्ट स्तर लिखो।
-
-    ### 🎯 लाइव ट्रेड सेटअप (ऐक्शन प्लान)
-    - **आज का इंट्राडे झुकाव (Bias):** [तेजी / मंदी / न्यूट्रल]
-    - **एंट्री ज़ोन (Entry Zone):** ${live_spot:.2f} के नजदीक का दायरा।
-    - **स्टॉप लॉस (SL):** सुरक्षित स्टॉप लॉस स्तर।
-    - **टारगेट 1 (TP1):** पहला संभावित लक्ष्य स्तर।
-    """
+    prompt_main = f"Calculate trade levels for current spot price: ${live_spot:.2f} using context: {context_payload}"
+    
+    sys_instruction_main = (
+        "You are an expert SMC trader. Your output must be written entirely in Hindi script (Devanagari). "
+        "Format exactly like this:\n"
+        "### 📋 लाइव इंट्राडे मुख्य लेवल्स (SMC ग्रिड)\n"
+        "- **PDH:** [Level]\n"
+        "- **PDL:** [Level]\n"
+        "- **रेसिस्टेंस 1 (R1):** [Level]\n"
+        "- **सपोर्ट 1 (S1):** [Level]\n"
+        "### 🎯 लाइव ट्रेड सेटअप (ऐक्शन प्लान)\n"
+        "- **आज का इंट्राडे झुकाव (Bias):** [Bias]\n"
+        "- **एंट्री ज़ोन (Entry Zone):** [Zone]\n"
+        "- **स्टॉप लॉस (SL):** [Level]\n"
+        "- **टारगेट 1 (TP1):** [Level]"
+    )
+    
     try:
-        return client.models.generate_content(model='gemini-2.5-flash', contents=prompt_main).text
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt_main,
+            config=types.GenerateContentConfig(
+                system_instruction=sys_instruction_main,
+                temperature=0.1
+            )
+        )
+        return response.text
     except:
         return f"### 📋 Dynamic Intraday Key Levels\n- **Live Base Spot:** {live_spot:.2f}"
 
