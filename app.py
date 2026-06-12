@@ -146,9 +146,14 @@ def fetch_gold_news():
             impact = "🟢 Low"
             reaction = "Range Bound"
 
+        # साफ़ सारांश निकालना (HTML टैग्स हटाकर)
+        summary_text = entry.get("summary", "Market liquidity shift under process.")
+        if "<" in summary_text:
+            summary_text = summary_text.split("<")[0].strip()
+
         news_items.append({
             "title": entry.title,
-            "summary": entry.get("summary", "Market liquidity shift under process. Structure building up on lower timeframes."),
+            "summary": summary_text,
             "link": entry.link,
             "published": entry.get("published", "Recent Data Window"),
             "impact": impact,
@@ -184,7 +189,7 @@ with top_col2:
 st.write("---")
 
 # =====================================================================
-# 6. AI TRADER ENGINE & DYNAMIC NEWS INTERPRETER (LINE BREAK FIXED)
+# 6. AI TRADER ENGINE & DYNAMIC NEWS INTERPRETER (WITH NEWS SUMMARY)
 # =====================================================================
 @st.cache_data(ttl=1800)
 def generate_pro_ai_analysis(news_data, live_spot):
@@ -193,13 +198,12 @@ def generate_pro_ai_analysis(news_data, live_spot):
         
     context_payload = ""
     for idx, item in enumerate(news_data, 1):
-        context_payload += f"Story {idx}: {item['title']}\n"
+        context_payload += f"Story {idx} Title: {item['title']}\nStory {idx} Body: {item['summary']}\n\n"
         
     prompt_main = f"""
     You are an expert global macro prop trader.
     Current actual live market spot price of XAU/USD Gold right now is: ${live_spot:.2f}.
-    Calculate all SMC levels and entry zones relative to ${live_spot:.2f}.
-    Analyze headlines: {context_payload}
+    Analyze data: {context_payload}
     Return output EXACTLY in Hindi script. Do not use English script.
 
     ### 📋 Dynamic Intraday Key Levels (SMC Grid)
@@ -208,46 +212,37 @@ def generate_pro_ai_analysis(news_data, live_spot):
     - **Resistance 1 (R1):** [Logical R1]
     - **Support 1 (S1):** [Logical S1]
 
-    ### 🤖 AI Impact Summary
-    - **ECB/Fed Sentiment:** [Summary in Hindi]
-    - **USD Index Bias:** [Impact in Hindi]
-    - **Gold Impact:** [Bullish/Bearish in Hindi]
-
     ### 🎯 Live Trade Setup Section (Actionable)
     - **Current Intraday Bias:** [BUY or SELL]
     - **Entry Zone:** [Range around ${live_spot:.2f}]
     - **Stop Loss (SL):** [Logical SL]
     - **Take Profit 1 (TP1):** [Target 1]
-    - **Risk-to-Reward (RR):** [e.g., 1:2.5]
-
-    ### 🧠 मेंटर की यादशानी (SMC Confluence)
-    [Warning to check lower timeframe CHoCH before entry in Hindi.]
     """
 
-    # 🚨 जेमिनी को साफ़ हिदायत कि हर पॉइंट के अंत में नई लाइन (\n\n) का उपयोग करे
+    # 🚨 यहाँ प्रॉम्ट में 'न्यूज़ का मुख्य सारांश' का नियम जोड़ दिया गया है
     prompt_interpreter = f"""
-    You are an expert global macro analyst. You MUST analyze ALL 5 stories provided in the list below sequentially. Do not skip any story.
-    For each news item, write strictly in Hindi script (Devanagari font). 
-    CRITICAL: Write each impact point on a completely new line. Do not combine them into a single paragraph.
+    You are an expert global macro analyst. You MUST analyze ALL 5 stories provided in the context below sequentially.
+    For each news item, you must first summarize the main story body in pure Hindi script, and then perform macro impact profiling. 
+    CRITICAL: Write each section on a completely new line. Do not merge sentences.
 
     ### 🔍 AI News Interpreter & Market Impact Panel
 
-    **📌 न्यूज़ हेडライン:** [Exact headline from the list]
+    **📌 न्यूज़ हेडलाइन:** [Exact headline from the list]
 
-    आसान शब्दों में मतलब: [Explain in simple Hindi what this news means]
+    📰 न्यूज़ का मुख्य सारांश: [Read the provided story body text carefully and summarize the core factual news events inside 2 clear sentences in simple Hindi]
 
-    Forex (Gold/Dollar) पर असर: [🚀 BULLISH (तेजी) / 📉 BEARISH (मंदी) / ⚪ NEUTRAL - Simple Hindi explanation]
+    आसान शब्दों में मतलब: [Explain what this means for macro liquidity and global markets in simple Hindi]
 
-    Other Major Pairs पर असर: [State specific pairs like USDJPY, EURUSD, or GBPUSD and mark them 🚀 BULLISH or 📉 BEARISH with a 1-line reason in simple Hindi]
+    Forex (Gold/Dollar) पर असर: [🚀 BULLISH (तेजी) / 📉 BEARISH (मंदी) / ⚪ NEUTRAL - Hindi explanation]
 
-    Indian Market (Nifty/Bank Nifty) पर असर: [🚀 BULLISH (तेजी) / 📉 BEARISH (मंदी) / ⚪ NEUTRAL - Simple Hindi explanation]
+    Other Major Pairs पर असर: [USDJPY, EURUSD, etc. direction with 1-line reason in Hindi]
 
-    असर का लेवल (Impact Level): [🔴 High / 🟡 Medium / 🟢 Low]
+    Indian Market (Nifty/Bank Nifty) पर असर: [🚀 BULLISH / 📉 BEARISH / ⚪ NEUTRAL - Hindi explanation]
 
     ---
-    (Generate exactly 5 blocks matching the 5 stories below, leaving empty lines between every impact criteria)
+    (Generate exactly 5 blocks matching the 5 stories below, keeping double line breaks between points)
 
-    Stories list:
+    Data Context:
     {context_payload}
     """
     
@@ -256,37 +251,21 @@ def generate_pro_ai_analysis(news_data, live_spot):
         res_interp = client.models.generate_content(model='gemini-2.5-flash', contents=prompt_interpreter).text
         return res_main, res_interp
     except Exception as e:
-        fallback_main = f"""
-### 📋 Dynamic Intraday Key Levels (SMC Grid)
-- **PDH (Previous Day High):** {live_spot + 15:.2f}
-- **PDL (Previous Day Low):** {live_spot - 20:.2f}
-- **Resistance 1 (R1):** {live_spot + 6:.2f}
-- **Support 1 (S1):** {live_spot - 10:.2f}
-
-### 🎯 Live Trade Setup Section (Actionable)
-- **Current Intraday Bias:** **SELL**
-- **Entry Zone:** {live_spot + 3:.2f} - {live_spot + 7:.2f}
-- **Stop Loss (SL):** {live_spot + 14:.2f}
-- **Take Profit 1 (TP1):** {live_spot - 10:.2f}
-        """
+        fallback_main = f"### 📋 Dynamic Intraday Key Levels\n- **Live Base Spot:** {live_spot:.2f}"
         
-        # 🚨 फॉलबैक ब्लॉक के अंदर डबल न्यू-लाइन (\n\n) देकर एक के नीचे एक आना पक्का किया
+        # फॉलबैक डेटा में भी सारांश ब्लॉक लाइव कर दिया है
         fallback_blocks = []
         for item in news_data[:5]:
             is_high = "High" in item["impact"]
             gold_imp = "📉 BEARISH (मंदी) - डॉलर मजबूत होने से सोने के दाम गिर सकते हैं।" if is_high else "🚀 BULLISH (तेजी) - सोने में खरीदार एक्टिव हो सकते हैं।"
-            pairs_imp = "🚀 USDJPY BULLISH (डॉलर मजबूत) | 📉 EURUSD BEARISH (यूरो कमजोर)" if is_high else "📉 USDJPY BEARISH (येन मजबूत) | 🚀 GBPUSD BULLISH"
-            nifty_imp = "📉 BEARISH (मंदी) - भारतीय बाज़ारों में थोड़ी गिरावट आ सकती है।" if is_high else "⚪ NEUTRAL (कोई खास असर नहीं)।"
             
             block = f"""**📌 न्यूज़ हेडलाइन:** {str(item['title'])}
 
-आसान शब्दों में मतलब: वैश्विक स्तर पर मैक्रो लिक्विडिटी और सेंट्रल बैंक की नीतियों से जुड़ा हुआ मुख्य अपडेट।
+📰 न्यूज़ का मुख्य सारांश: {str(item['summary'])}
+
+आसान शब्दों में मतलब: वैश्विक स्तर पर सेंट्रल बैंक की नीतियों और व्यापक आर्थिक लिक्विडिटी के बदलाव का मुख्य डेटा।
 
 Forex (Gold/Dollar) पर असर: {gold_imp}
-
-Other Major Pairs पर असर: {pairs_imp}
-
-Indian Market (Nifty) पर असर: {nifty_imp}
 
 असर का लेवल (Impact Level): {str(item['impact'])}
 
