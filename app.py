@@ -236,7 +236,7 @@ def generate_pro_ai_analysis(news_data, live_spot):
             gold_imp = "📉 BEARISH (मंदी) - डॉलर मजबूत होने से सोने के दाम गिर सकते हैं।" if is_high else "🚀 BULLISH (तेजी) - सोने में खरीदार एक्टिव हो सकते हैं।"
             nifty_imp = "📉 BEARISH (मंदी) - भारतीय बाज़ारों में थोड़ी प्रॉफिट बुकिंग आ सकती है।" if is_high else "⚪ NEUTRAL (कोई खास असर नहीं)।"
             
-            fallback_interp += f"**📌 न्यूज़ हेडライン:** {item['title']}\n"
+            fallback_interp += f"**📌 न्यूज़ हेडलाइन:** {item['title']}\n"
             fallback_interp += f"- **आसान शब्दों में मतलब:** यह खबर सीधे बड़े देशों के केंद्रीय बैंकों और ब्याज दरों से जुड़ी है, जिसका सीधा असर बड़े इन्वेस्टर के पैसों के मूवमेंट पर पड़ता है।\n"
             fallback_interp += f"- **Forex (Gold/Dollar) पर असर:** {gold_imp}\n"
             fallback_interp += f"- **Indian Market (Nifty) पर असर:** {nifty_imp}\n"
