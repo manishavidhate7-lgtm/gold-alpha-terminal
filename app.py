@@ -2,7 +2,6 @@ import streamlit as st
 import feedparser
 import streamlit.components.v1 as components
 import time
-import plotly.graph_objects as go
 from groq import Groq
 
 # 1. PAGE CONFIG
@@ -10,10 +9,6 @@ st.set_page_config(page_title="Wolf Alpha Pro Terminal", layout="wide")
 
 # 2. AI ANALYZER
 client = Groq(api_key="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")
-
-def get_sentiment_score():
-    # यह फंक्शन AI से 1 से 10 के बीच स्कोर लेगा
-    return 6 
 
 def get_single_news_impact(news_title):
     prompt = f"Analyze: '{news_title}'. Format: Impact on XAU/USD, USD/INR, Nifty (High/Med/Low) + Reasoning."
@@ -24,6 +19,8 @@ def get_single_news_impact(news_title):
 
 # 3. UI LAYOUT
 st.title("⚡ Wolf Alpha Pro Terminal | Live")
+
+# Row 1: Chart, Sentiment, and Calendar
 col_left, col_mid, col_right = st.columns([1.5, 1, 1])
 
 with col_left:
@@ -31,19 +28,9 @@ with col_left:
     components.html("""<div class="tradingview-widget-container"><script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>{"symbol": "OANDA:XAUUSD", "width": "100%", "height": 300, "colorTheme": "light"}</script></div>""", height=320)
 
 with col_mid:
-    st.markdown("### 📊 Market Sentiment Gauge")
-    score = get_sentiment_score()
-    fig = go.Figure(go.Indicator(
-        mode = "gauge+number",
-        value = score,
-        domain = {'x': [0, 1], 'y': [0, 1]},
-        gauge = {'axis': {'range': [-10, 10]}, 'bar': {'color': "darkblue"}, 'steps': [
-            {'range': [-10, -2], 'color': "red"},
-            {'range': [-2, 2], 'color': "gray"},
-            {'range': [2, 10], 'color': "green"}]}
-    ))
-    fig.update_layout(height=250, margin=dict(l=20, r=20, t=20, b=20))
-    st.plotly_chart(fig, use_container_width=True)
+    st.markdown("### 📊 Market Sentiment")
+    st.metric(label="Sentiment Score", value="6/10", delta="Bullish")
+    if st.button("🔄 Refresh"): st.rerun()
 
 with col_right:
     st.markdown("### 📅 Economic Calendar")
@@ -51,7 +38,19 @@ with col_right:
 
 st.write("---")
 
-# 4. NEWS & ANALYZER
+# Row 2: Currency Heatmap
+st.markdown("### 🗺️ Currency Strength Heatmap")
+components.html("""
+<div class="tradingview-widget-container">
+  <script type="text/javascript" src="https://s.tradingview.com/external-embedding/embed-widget-forex-heat-map.js" async>
+  {"width": "100%", "height": 400, "currencies": ["EUR", "USD", "JPY", "GBP", "CHF", "AUD", "CAD", "NZD", "INR"], "isTransparent": false, "colorTheme": "light"}
+  </script>
+</div>
+""", height=420)
+
+st.write("---")
+
+# Row 3: News
 st.header("📰 Live Market News & AI Analyser")
 sources = ["https://www.investing.com/rss/news_14.rss", "https://www.fxstreet.com/rss"]
 for url in sources:
@@ -63,6 +62,6 @@ for url in sources:
                 if st.button("Analyze", key=item.title):
                     with st.spinner("AI analyzing..."): st.markdown(get_single_news_impact(item.title))
 
-# 5. AUTO-REFRESH
+# 4. AUTO-REFRESH
 time.sleep(60)
 st.rerun()
