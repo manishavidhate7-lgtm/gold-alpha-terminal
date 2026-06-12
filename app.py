@@ -6,90 +6,48 @@ from groq import Groq
 # 1. PAGE SETUP
 st.set_page_config(page_title="Wolf Alpha Terminal | XAU/USD", layout="wide", initial_sidebar_state="collapsed")
 
-# 2. GROQ SETUP
 client = Groq(api_key="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")
 
-# 3. AI LOGIC (English Output)
-def get_ai_analysis():
-    # Live Spot Price context
-    spot_price = 4177.465 
+# 2. AI LOGIC (News Analysis Engine)
+def get_ai_analysis(news_content):
     prompt = f"""
-    Analyze XAUUSD current spot price: {spot_price}.
-    Return output EXACTLY in English with the following structure:
-
-    ### 📋 Dynamic Intraday Key Levels (SMC Grid)
-    - **PDH (Previous Daily High):** [Calculate based on {spot_price}]
-    - **PDL (Previous Daily Low):** [Calculate based on {spot_price}]
-    - **R1 (Resistance 1):** [Calculate based on {spot_price}]
-    - **S1 (Support 1):** [Calculate based on {spot_price}]
-
-    ### 🎯 Live Trade Setup
-    - **Bias:** [Bullish/Bearish/Neutral]
-    - **Entry:** [Price]
-    - **Stop Loss (SL):** [Price]
-    - **Target Price (TP):** [Price]
-    - **Risk-to-Reward Ratio (RR):** [Ratio]
-
-    ### 🔍 AI News Interpreter
-    - Provide a brief market impact analysis in English.
+    You are a professional Market Analyst. Analyze the following news and provide a structured impact report in English:
+    
+    NEWS DATA: {news_content}
+    
+    Provide the output in this EXACT format:
+    
+    ### 📊 Market Impact Analysis
+    1. **Summary:** Brief 2-line summary of the news.
+    2. **XAU/USD Impact:** [High/Medium/Low] - Explanation.
+    3. **Relevant Pair Impact (e.g., USD/INR or EUR/USD):** [High/Medium/Low] - Explanation.
+    4. **Indian Market (Nifty/Sensex) Impact:** [High/Medium/Low] - Explanation.
     """
-    try:
-        completion = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[{"role": "user", "content": prompt}]
-        )
-        return completion.choices[0].message.content
-    except Exception as e:
-        return f"AI Error: {e}"
+    completion = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[{"role": "user", "content": prompt}]
+    )
+    return completion.choices[0].message.content
 
-# 4. UI LAYOUT
+# 3. UI LAYOUT
 st.title("⚡ Wolf Alpha Terminal | XAU/USD")
 
-top1, top2 = st.columns([1, 1])
+# News Fetching Logic
+sources = ["https://www.investing.com/rss/news_14.rss", "https://www.fxstreet.com/rss"]
+news_data = ""
+for url in sources:
+    for item in feedparser.parse(url).entries[:3]:
+        news_data += f"- {item.title}\n"
 
-with top1:
-    st.markdown("### 🚀 Live Spot Chart")
-    components.html("""
-    <div class="tradingview-widget-container">
-      <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>
-      {"symbol": "OANDA:XAUUSD", "width": "100%", "colorTheme": "light", "locale": "en"}
-      </script>
-    </div>
-    """, height=130)
-
-with top2:
-    st.markdown("### 📊 HTF Alignment Meters")
-    # border=True का इस्तेमाल किया है ताकि हर हाल में डिब्बा दिखे
-    m1, m2, m3, m4 = st.columns(4)
-    with m1:
-        with st.container(border=True):
-            st.markdown("<div style='text-align:center'>5M<br><b style='color:red'>SELL</b></div>", unsafe_allow_html=True)
-    with m2:
-        with st.container(border=True):
-            st.markdown("<div style='text-align:center'>15M<br><b style='color:red'>SELL</b></div>", unsafe_allow_html=True)
-    with m3:
-        with st.container(border=True):
-            st.markdown("<div style='text-align:center'>1H<br><b style='color:grey'>NEUT</b></div>", unsafe_allow_html=True)
-    with m4:
-        with st.container(border=True):
-            st.markdown("<div style='text-align:center'>4H<br><b style='color:green'>BUY</b></div>", unsafe_allow_html=True)
-
-st.write("---")
-
-# 5. NEWS & AI DESK
 col1, col2 = st.columns([1, 1], gap="large")
 
 with col1:
     st.header("📰 Live Market News")
-    sources = ["https://www.investing.com/rss/news_14.rss", "https://www.fxstreet.com/rss"]
-    for url in sources:
-        for item in feedparser.parse(url).entries[:3]:
-            with st.container(border=True):
-                st.subheader(item.title)
-                st.markdown(f"[Read More]({item.link})")
+    st.text(news_data) # ये न्यूज़ डेटा हमने वेरिएबल में ले लिया
 
 with col2:
     st.header("🤖 Advanced AI Desk")
-    if st.button("🔄 Analyze Market Bias"):
-        with st.spinner("Analyzing market..."):
-            st.markdown(get_ai_analysis())
+    if st.button("🔄 Analyze Live News Impact"):
+        with st.spinner("Processing news impact..."):
+            analysis = get_ai_analysis(news_data)
+            st.markdown(analysis)
