@@ -6,7 +6,7 @@ import time
 import urllib.request
 import json
 import google.genai as genai
-from google.genai import types  # सिस्टम कॉन्फ़िगरेशन के लिए अनिवार्य
+from google.genai import types
 from bs4 import BeautifulSoup
 
 # =====================================================================
@@ -170,32 +170,32 @@ with top_col2:
 st.write("---")
 
 # =====================================================================
-# 6. AI DESK ENGINE (🚨 ULTRA-STRICT HINDI ENFORCEMENT)
+# 6. AI DESK ENGINE (🚨 ATTENTION-BIAS FIX: EXTREME HINDI CONSTRAINT)
 # =====================================================================
 @st.cache_data(ttl=60)
 def generate_isolated_interpretation(title, content):
     if not client:
         return "AI Engine Offline"
         
+    # प्रॉम्ट को पूरी तरह हिंदी निर्देशों से भर दिया ताकि मॉडल का ध्यान न भटके
     prompt = f"""
-    तुम्हें इस अंग्रेजी खबर का अनुवाद नहीं करना है, बल्कि इसका गहन विश्लेषण पूरी तरह से हिंदी भाषा में लिखना है।
-    
-    खबर की जानकारी:
-    शीर्षक (Title): {title}
-    सामग्री (Content): {content}
+    दिए गए डेटा का केवल हिंदी भाषा में ही आउटपुट देना है। अंग्रेजी का एक भी वाक्य नहीं होना चाहिए।
+    डेटा यहाँ है:
+    डेटा_शीर्षक: {title}
+    डेटा_विवरण: {content}
     """
     
     sys_instruction = (
-        "You are an expert global macro financial analyst. You MUST answer exclusively in Hindi using Devanagari script. "
-        "Even though the input news content is in English, your generated text for explanations, summaries, and market impacts "
-        "MUST be written in fluent, professional Hindi words. Do not output any English sentences or English explanations. "
-        "Strictly use this exact markdown structure for your response:\n\n"
-        "📌 **न्यूज़ हेडलाइन:** [Translate the headline to clear Hindi here]\n\n"
-        "📰 **न्यूज़ का मुख्य सारांश:** [Write a deep summary and analytical breakdown of the news in 2-3 detailed Hindi sentences]\n\n"
-        "💡 **आसान शब्दों में मतलब:** [Explain the fundamental trading implications simply in Hindi]\n\n"
-        "📈 **Forex (Gold/Dollar) पर असर:** [Bullish/Bearish/Neutral with detailed logic in Hindi]\n\n"
-        "💱 **Other Major Pairs पर असर:** [Impact on USDJPY, EURUSD, GBPUSD in Hindi]\n\n"
-        "🇮🇳 **Indian Market (Nifty/Bank Nifty) पर असर:** [Impact on Indian equity markets in Hindi]"
+        "CRITICAL RULE: You must write every single sentence in Hindi language using Devanagari script. "
+        "You are strictly forbidden from writing responses in English. Even if the input text is in English, "
+        "your analysis must be 100% in Hindi. Never use English sentences. "
+        "Generate your response in Hindi using this exact template format:\n\n"
+        "📌 **न्यूज़ हेडलाइन:** [अंग्रेजी हेडलाइन का हिंदी अनुवाद यहाँ लिखें]\n\n"
+        "📰 **न्यूज़ का मुख्य सारांश:** [इस खबर का पूरा मतलब और विश्लेषण हिंदी में 2-3 वाक्यों में समझाएं]\n\n"
+        "💡 **आसान शब्दों में मतलब:** [ट्रेडिंग के नजरिए से इसका क्या अर्थ है, हिंदी में लिखें]\n\n"
+        "📈 **Forex (Gold/Dollar) पर असर:** [सोने और डॉलर पर तेजी या मंदी का असर हिंदी में कारण सहित लिखें]\n\n"
+        "💱 **Other Major Pairs पर असर:** [EURUSD या USDJPY पर होने वाला प्रभाव हिंदी में लिखें]\n\n"
+        "🇮🇳 **Indian Market (Nifty/Bank Nifty) पर असर:** [भारतीय बाजारों पर असर हिंदी में समझाएं]"
     )
     
     try:
@@ -204,12 +204,13 @@ def generate_isolated_interpretation(title, content):
             contents=prompt,
             config=types.GenerateContentConfig(
                 system_instruction=sys_instruction,
-                temperature=0.1  # कम क्रिएटिविटी ताकि निर्देशों का पक्का पालन हो
+                temperature=0.0,  # 0.0 टेम्परेचर यानी मॉडल को निर्देशों पर बिल्कुल फिक्स कर देना
+                response_mime_type="text/plain"
             )
         )
         return response.text
     except Exception as e:
-        return f"**📌 न्यूज़ हेडलाइन:** {title}\n\n📰 न्यूज़ का मुख्य सारांश: {content}\n\n⚪ विश्लेषण लोड नहीं हो पाया।"
+        return f"**📌 न्यूज़ हेडलाइन:** {title}\n\n⚪ विश्लेषण लोड नहीं हो पाया।"
 
 @st.cache_data(ttl=60)
 def generate_smc_grid(news_data, live_spot):
@@ -220,20 +221,19 @@ def generate_smc_grid(news_data, live_spot):
     for idx, item in enumerate(news_data, 1):
         context_payload += f"News {idx}: {item['title']}\n"
         
-    prompt_main = f"Calculate technical SMC levels for Gold spot price: ${live_spot:.2f} based on this market context: {context_payload}"
+    prompt_main = f"Calculate technical SMC levels for price: ${live_spot:.2f} using context: {context_payload}"
     
     sys_instruction_main = (
-        "You are a professional Smart Money Concepts (SMC) trader. You must generate the entire trading levels grid "
-        "and tactical action plan in Hindi script only. Do not use English words or sentences for descriptions. "
-        "Format exactly like this:\n\n"
+        "You are a professional trader. You must answer exclusively in Hindi script (Devanagari). "
+        "Do not use English sentences or English words for descriptions. Format exactly like this:\n\n"
         "### 📋 लाइव इंट्राडे मुख्य लेवल्स (SMC ग्रिड)\n"
         "- **PDH (पिछले दिन का हाई):** $[Calculate and print Level]\n"
         "- **PDL (पिछले दिन का लो):** $[Calculate and print Level]\n"
         "- **रेसिस्टेंस 1 (R1):** $[Calculate Level]\n"
         "- **सपोर्ट 1 (S1):** $[Calculate Level]\n\n"
         "### 🎯 लाइव ट्रेड सेटअप (ऐक्शन प्लान)\n"
-        "- **आज का इंट्राडे झुकाव (Bias):** [तेजी (Bullish) / मंदी (Bearish) / न्यूट्रल]\n"
-        "- **एंट्री ज़ोन (Entry Zone):** $[Zone range based on numbers]\n"
+        "- **आज का इंट्राडे झुकाव (Bias):** [तेजी / मंदी / न्यूट्रल]\n"
+        "- **एंट्री ज़ोन (Entry Zone):** $[Zone range in numbers]\n"
         "- **स्टॉप लॉस (SL):** $[Level]\n"
         "- **टारगेट 1 (TP1):** $[Level]"
     )
@@ -244,7 +244,8 @@ def generate_smc_grid(news_data, live_spot):
             contents=prompt_main,
             config=types.GenerateContentConfig(
                 system_instruction=sys_instruction_main,
-                temperature=0.1
+                temperature=0.0,
+                response_mime_type="text/plain"
             )
         )
         return response.text
@@ -285,7 +286,7 @@ with col2:
     static_news = fetch_gold_news()
     
     if not client:
-        st.warning("⚠️ सर्वर तिजोरी (Secrets) में 'GEMINI_API_KEY' डालना बाकी है।")
+        st.warning("⚠️ सर्ver तिजोरी (Secrets) में 'GEMINI_API_KEY' डालना बाकी है।")
     
     if static_news:
         with st.spinner("जेमिनी प्रो इंजन लाइव लेवल्स और सभी खबरों का शुद्ध हिंदी विश्लेषण कैलकुलेट कर रहा है..."):
