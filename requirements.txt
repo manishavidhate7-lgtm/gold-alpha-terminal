@@ -3,3 +3,4 @@ groq
 deep-translator
 feedparser
 beautifulsoup4
+plotly
