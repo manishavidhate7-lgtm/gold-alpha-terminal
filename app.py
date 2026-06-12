@@ -162,19 +162,15 @@ with top_col2:
     st.markdown("### 📊 HTF Alignment Meters")
     htf_cols = st.columns(4)
     with htf_cols[0]: st.markdown('<div class="meter-card"><div class="timeframe-title">⏳ 5M</div><span class="sell-text">🔴 STRONG SELL</span><div class="meter-bar-bg"><div class="meter-fill-sell"></div></div></div>', unsafe_allow_html=True)
-    with htf_cols[1]: st.markdown('<div class="meter-card"><div class="timeframe-title">⏳ 15M</div><span class="sell-text">🔴 SELL</span><div class="meter-bar-bg"><div class="meter-fill-sell" style="width:65%;"></div></div></div>', unsafe_allow_html=True)
-    with htf_cols[2]: st.markdown('<div class="meter-card"><div class="timeframe-title">⏳ 1H</div><span class="neutral-text">⚪ NEUTRAL</span><div class="meter-bar-bg"><div class="meter-fill-neut"></div></div></div>', unsafe_allow_html=True)
-    with htf_cols[3]: st.markdown('<div class="meter-card"><div class="timeframe-title">⏳ 4H</div><span class="buy-text">🟢 BUY</span><div class="meter-bar-bg"><div class="meter-fill-buy"></div></div></div>', unsafe_allow_html=True)
+    with htf_cols[1]: st.markdown('<div class="metric-card"><div class="timeframe-title">⏳ 15M</div><span class="sell-text">🔴 SELL</span><div class="meter-bar-bg"><div class="meter-fill-sell" style="width:65%;"></div></div></div>', unsafe_allow_html=True)
+    with htf_cols[2]: st.markdown('<div class="metric-card"><div class="timeframe-title">⏳ 1H</div><span class="neutral-text">⚪ NEUTRAL</span><div class="meter-bar-bg"><div class="meter-fill-neut"></div></div></div>', unsafe_allow_html=True)
+    with htf_cols[3]: st.markdown('<div class="metric-card"><div class="timeframe-title">⏳ 4H</div><span class="buy-text">🟢 BUY</span><div class="meter-bar-bg"><div class="meter-fill-buy"></div></div></div>', unsafe_allow_html=True)
 
 st.write("---")
 
 # =====================================================================
 # 6. AI DESK ENGINE (🚨 PURE HINDI FORCE DIRECTIVES)
 # =====================================================================
-@st.container()
-def fix_language_and_structure():
-    pass
-
 @st.cache_data(ttl=60)
 def generate_isolated_interpretation(title, content):
     if not client:
@@ -217,7 +213,7 @@ def generate_smc_grid(news_data, live_spot):
         
     prompt_main = f"""
     तुम एक वैश्विक स्तर के प्रियरिटी कमोडिटी ट्रेडर हो। तुम्हें सोने (Gold) के रीयल-टाइम लेवल्स हिंदी में देने हैं।
-    वर्तमान लाइव मार्केट स्पॉट प्राइस: ${live_spot:.2f}.
+    वर्तमान लाइव接收 मार्केट स्पॉट प्राइस: ${live_spot:.2f}.
     बाजार का संदर्भ: {context_payload}
     तुम्हारा पूरा जवाब देवनागरी हिंदी लिपि में होना अनिवार्य है।
 
