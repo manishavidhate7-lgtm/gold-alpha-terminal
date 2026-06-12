@@ -8,7 +8,7 @@ import json
 import google.genai as genai
 
 # =====================================================================
-# 1. PAGE SETUP & MOBILE-FIRST UI CONFIG
+# 1. PAGE SETUP & ULTRA MOBILE-RESPONSIVE UI CONFIG
 # =====================================================================
 st.set_page_config(
     page_title="XAUUSD Alpha Terminal v2", 
@@ -16,40 +16,64 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+# मोबाइल स्क्रीन के लिए एडवांस्ड CSS ओवरराइड्स
 st.markdown("""
 <style>
     html, body, [data-testid="stAppViewContainer"] {
         background-color: #fafbfc;
     }
+    
+    /* एसएमसी लेवल्स के कार्ड्स */
     .metric-card { 
         background-color: #ffffff; 
-        padding: 12px; 
+        padding: 10px; 
         border-radius: 8px; 
         border: 1px solid #e2e8f0; 
         text-align: center;
         box-shadow: 0px 4px 6px -1px rgba(0, 0, 0, 0.05);
-        margin-bottom: 8px;
+        margin-bottom: 6px;
     }
     .timeframe-title {
-        font-size: 13px;
+        font-size: 12px;
         font-weight: bold;
         color: #64748b;
-        margin-bottom: 3px;
+        margin-bottom: 2px;
     }
-    .buy-text { color: #089981; font-weight: 800; font-size: 16px; }
-    .sell-text { color: #f23645; font-weight: 800; font-size: 16px; }
-    .neutral-text { color: #64748b; font-weight: 800; font-size: 16px; }
+    .buy-text { color: #089981; font-weight: 800; font-size: 15px; }
+    .sell-text { color: #f23645; font-weight: 800; font-size: 15px; }
+    .neutral-text { color: #64748b; font-weight: 800; font-size: 15px; }
     
+    /* 🚨 मोबाइल रिस्पॉन्सिव फ्लेक्सबॉक्स ग्रिड (यह लेआउट फिक्स करेगा) */
+    .responsive-grid {
+        display: flex;
+        flex-direction: row;
+        gap: 20px;
+        width: 100%;
+    }
+    .responsive-col {
+        flex: 1;
+        min-width: 0;
+    }
+
+    /* मोबाइल स्क्रीन (768px से छोटी) के लिए स्पेशल रूल्स */
     @media (max-width: 768px) {
+        .responsive-grid {
+            flex-direction: column !important; /* साइड-बाई-साइड की जगह एक के नीचे एक करेगा */
+        }
         .block-container {
             padding-top: 1rem !important;
             padding-bottom: 1rem !important;
-            padding-left: 0.5rem !important;
-            padding-right: 0.5rem !important;
+            padding-left: 0.4rem !important;
+            padding-right: 0.4rem !important;
         }
-        h1 { font-size: 22px !important; }
+        h1 { font-size: 20px !important; }
         h2 { font-size: 18px !important; }
-        h3 { font-size: 16px !important; }
+        h3 { font-size: 15px !important; }
+        
+        /* मोबाइल पर ट्रेडिंगव्यू विजेट को पूरा स्पेस देने के लिए */
+        iframe {
+            height: 150px !important;
+        }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -57,7 +81,7 @@ st.markdown("""
 st.title("⚡ XAU/USD Alpha Terminal v2")
 
 # =====================================================================
-# 2. CONFIGURE THE OFFICIAL GOOGLE GEMINI CLIENT (🔒 PRODUCTION SECURE)
+# 2. CONFIGURE THE OFFICIAL GOOGLE GEMINI CLIENT
 # =====================================================================
 if "GEMINI_API_KEY" in st.secrets:
     GOOGLE_API_KEY = st.secrets["GEMINI_API_KEY"]
@@ -74,7 +98,7 @@ except Exception as e:
     client = None
 
 # =====================================================================
-# 3. LIVE BACKGROUND PRICE ENGINE (FOR AI SYNC)
+# 3. LIVE BACKGROUND PRICE ENGINE
 # =====================================================================
 def get_live_gold_price_backup():
     try:
@@ -118,7 +142,7 @@ def fetch_gold_news():
     return news_items
 
 # =====================================================================
-# 5. TOP ROW: LIVE SPOT PRICE & HTF ALIGNMENT
+# 5. TOP ROW: LIVE SPOT PRICE & HTF ALIGNMENT (RESPONSIVE)
 # =====================================================================
 top_col1, top_col2 = st.columns([1, 1])
 
@@ -132,7 +156,7 @@ with top_col1:
       </script>
     </div>
     """
-    components.html(tv_ticker_html, height=130)
+    components.html(tv_ticker_html, height=140)
 
 with top_col2:
     st.markdown("### 📊 HTF Alignment")
@@ -145,7 +169,7 @@ with top_col2:
 st.write("---")
 
 # =====================================================================
-# 6. AI TRADER ENGINE & DYNAMIC NEWS INTERPRETER (5 NEWS + MULTI PAIR FIX)
+# 6. AI TRADER ENGINE & DYNAMIC NEWS INTERPRETER
 # =====================================================================
 @st.cache_data(ttl=1800)
 def generate_pro_ai_analysis(news_data, live_spot):
@@ -185,7 +209,6 @@ def generate_pro_ai_analysis(news_data, live_spot):
     [Warning to check lower timeframe CHoCH before entry in Hindi.]
     """
 
-    # 🎯 प्रॉम्प्ट में साफ़ निर्देश: सभी 5 खबरों का विश्लेषण और बाकी मेजर पेयर्स का भी नाम
     prompt_interpreter = f"""
     You are an expert global macro analyst. You MUST analyze ALL 5 stories provided in the list below sequentially. Do not skip any story.
     For each news item, write strictly in Hindi script (Devanagari font) and explicitly mention laymen-friendly direction (🚀 BULLISH / 📉 BEARISH / ⚪ NEUTRAL) for Gold, Indian Market, and other Major Forex Pairs (like USDJPY, EURUSD, GBPUSD based on the macro context).
@@ -225,7 +248,6 @@ def generate_pro_ai_analysis(news_data, live_spot):
 - **Take Profit 1 (TP1):** {live_spot - 10:.2f}
         """
         
-        # 🎯 फॉलबैक इंजन में भी अब 5 न्यूज़ लूप और नए पेयर्स का पूरा सपोर्ट डाल दिया है
         fallback_interp = "### 🔍 AI News Interpreter & Market Impact Panel (Dynamic Flow)\n\n"
         for item in news_data[:5]:
             is_high = "High" in item["impact"]
@@ -243,47 +265,54 @@ def generate_pro_ai_analysis(news_data, live_spot):
         return fallback_main, fallback_interp
 
 # =====================================================================
-# 7. DUAL-COLUMN MAIN DASHBOARD (AUTO-STACKS ON MOBILE)
+# 7. DUAL-COLUMN MAIN DASHBOARD (BUILT WITH RESPONSIVE CSS CONTAINERS)
 # =====================================================================
-col1, col2 = st.columns([1, 1], gap="large")
+# यहाँ हमने ट्रेडिशनल st.columns हटाकर HTML Flexbox ग्रिड इन्जेक्ट किया है
+st.markdown('<div class="responsive-grid">', unsafe_allow_html=True)
 
-with col1:
-    st.header("📰 Live Alpha News Flow")
+# ---- LEFT PANEL (NEWS FLOW) ----
+st.markdown('<div class="responsive-col">', unsafe_allow_html=True)
+st.header("📰 Live Alpha News Flow")
+
+@st.fragment(run_every=60)
+def show_live_news_stream():
+    current_news = fetch_gold_news()
+    st.caption(f"🔄 Auto-Refreshing: {time.strftime('%H:%M:%S')} (Every 60s)")
     
-    @st.fragment(run_every=60)
-    def show_live_news_stream():
-        current_news = fetch_gold_news()
-        st.caption(f"🔄 Auto-Refreshing: {time.strftime('%H:%M:%S')} (Every 60s)")
+    for item in current_news:
+        with st.container(border=True):
+            st.subheader(item["title"])
+            st.caption(f"📅 {item['published']}")
+            st.markdown(f"**Context:** {item['summary']}")
+            st.markdown(f"**Impact:** {item['impact']} | **Gold:** `{item['reaction']}`")
+            st.markdown(f"[Source Link]({item['link']})")
+            
+show_live_news_stream()
+st.markdown('</div>', unsafe_allow_html=True) # Left Panel End
+
+# ---- RIGHT PANEL (AI DESK) ----
+st.markdown('<div class="responsive-col">', unsafe_allow_html=True)
+st.header("🤖 Advanced AI Desk")
+
+if st.button("🔄 Reset & Refresh Terminal", type="primary", use_container_width=True):
+    st.cache_data.clear()
+    st.rerun()
+
+live_spot_value = get_live_gold_price_backup()
+static_news = fetch_gold_news()
+
+if not client:
+    st.warning("⚠️ सर्वर तिजोरी (Secrets) में 'GEMINI_API_KEY' डालना बाकी है।")
+
+if static_news:
+    with st.spinner("जेमिनी प्रो इंजन लाइव लेवल्स और सभी 5 खबरों का डीप विश्लेषण कैलकुलेट कर रहा है..."):
+        ai_main_output, ai_interpreter_output = generate_pro_ai_analysis(static_news, live_spot_value)
         
-        for item in current_news:
-            with st.container(border=True):
-                st.subheader(item["title"])
-                st.caption(f"📅 {item['published']}")
-                st.markdown(f"**Context:** {item['summary']}")
-                st.markdown(f"**Impact:** {item['impact']} | **Gold:** `{item['reaction']}`")
-                st.markdown(f"[Source Link]({item['link']})")
-                
-    show_live_news_stream()
-
-with col2:
-    st.header("🤖 Advanced AI Desk")
-    
-    if st.button("🔄 Reset & Refresh Terminal", type="primary", use_container_width=True):
-        st.cache_data.clear()
-        st.rerun()
-
-    live_spot_value = get_live_gold_price_backup()
-    static_news = fetch_gold_news()
-    
-    if not client:
-        st.warning("⚠️ सर्वर तिजोरी (Secrets) में 'GEMINI_API_KEY' डालना बाकी है। अभी बैकएंड फॉलबैक डेटा का उपयोग किया जा रहा है।")
-    
-    if static_news:
-        with st.spinner("जेमिनी प्रो इंजन लाइव लेवल्स और सभी 5 खबरों का डीप एनालिसिस कैलकुलेट कर रहा है..."):
-            ai_main_output, ai_interpreter_output = generate_pro_ai_analysis(static_news, live_spot_value)
+        st.markdown(ai_main_output)
+        st.write("---")
+        
+        with st.container(border=True):
+            st.markdown(ai_interpreter_output)
             
-            st.markdown(ai_main_output)
-            st.write("---")
-            
-            with st.container(border=True):
-                st.markdown(ai_interpreter_output)
+st.markdown('</div>', unsafe_allow_html=True) # Right Panel End
+st.markdown('</div>', unsafe_allow_html=True) # Grid End
