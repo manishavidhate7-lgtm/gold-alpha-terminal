@@ -8,7 +8,7 @@ import json
 import google.genai as genai
 
 # =====================================================================
-# 1. PAGE SETUP & AGGRESSIVE UI GAP REDUCTION & METERS CSS
+# 1. PAGE SETUP & COMPLETE TEXT COLOR + HEADINGS SIZE FIX
 # =====================================================================
 st.set_page_config(
     page_title="XAUUSD Alpha Terminal v2", 
@@ -16,10 +16,9 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# फालतू गैप्स हटाने और मीटर्स को कस्टमाइज़ करने का मास्टर CSS
+# गैप्स और टेक्स्ट फॉर्मेटिंग का CSS
 st.markdown("""
 <style>
-    /* पूरे ऐप का बैकग्राउंड और टॉप पैडिंग फिक्स */
     html, body, [data-testid="stAppViewContainer"] {
         background-color: #fafbfc !important;
     }
@@ -30,44 +29,38 @@ st.markdown("""
         padding-right: 1rem !important;
         max-width: 98% !important;
     }
-    
-    /* स्ट्रीमलिट के डिफ़ॉल्ट एलिमेंट्स के बीच की गैप्स कम करना */
     [data-testid="stVerticalBlock"] {
         gap: 0.4rem !important;
     }
     [data-testid="stHorizontalBlock"] {
         gap: 0.6rem !important;
     }
-    div.stButton {
-        margin-top: -5px !important;
-        margin-bottom: 5px !important;
-    }
     
-    /* सभी तरह के टेक्स्ट एलिमेंट्स का कलर फिक्स */
+    /* टेक्स्ट कलर और लाइन स्पेसिंग */
     [data-testid="stContentBlock"] h1, 
     [data-testid="stContentBlock"] h2, 
     [data-testid="stContentBlock"] h3, 
     [data-testid="stContentBlock"] p,
-    [data-testid="stContentBlock"] li,
-    .stMarkdown p, .stMarkdown h3, .stMarkdown li, .stMarkdown ul {
+    .stMarkdown p, .stMarkdown h3 {
         color: #1e293b !important;
+        line-height: 1.5 !important;
     }
     
-    /* एआई डेस्क कंटेनर और हेडिंग्स की टाइट स्पेसिंग */
     .ai-box-container {
         color: #1e293b !important;
         font-size: 14px !important;
     }
+    
     .stMarkdown h1, .stMarkdown h2, .stMarkdown h3,
     .ai-box-container h1, .ai-box-container h2, .ai-box-container h3 {
-        font-size: 14.5px !important;
+        font-size: 15px !important;
         font-weight: 800 !important;
-        margin-top: 6px !important;
-        margin-bottom: 3px !important;
-        line-height: 1.2 !important;
+        margin-top: 10px !important;
+        margin-bottom: 5px !important;
+        color: #1e293b !important;
     }
     
-    /* एचटीएफ अलाइनमेंट मीटर कार्ड्स */
+    /* मीटर्स की स्टाइल */
     .meter-card { 
         background-color: #ffffff; 
         padding: 8px 10px; 
@@ -82,8 +75,6 @@ st.markdown("""
         color: #475569;
         margin-bottom: 4px;
     }
-    
-    /* कस्टम मीटर बार्स */
     .meter-bar-bg {
         background-color: #e2e8f0;
         border-radius: 4px;
@@ -99,22 +90,6 @@ st.markdown("""
     .buy-text { color: #089981; font-weight: 800; font-size: 13px; }
     .sell-text { color: #f23645; font-weight: 800; font-size: 13px; }
     .neutral-text { color: #64748b; font-weight: 800; font-size: 13px; }
-    
-    /* कंटेनर बॉक्स की पैडिंग कम करना */
-    [data-testid="stMetricContainer"] {
-        padding: 4px !important;
-    }
-    .st-emotion-cache-12w0qpk {
-        padding: 0.6rem !important;
-    }
-    
-    @media (max-width: 768px) {
-        .block-container {
-            padding-left: 0.4rem !important;
-            padding-right: 0.4rem !important;
-        }
-        iframe { height: 125px !important; }
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -182,7 +157,7 @@ def fetch_gold_news():
     return news_items
 
 # =====================================================================
-# 5. TOP ROW: LIVE SPOT PRICE & HTF ALIGNMENT WITH METERS
+# 5. TOP ROW: LIVE SPOT PRICE & HTF ALIGNMENT
 # =====================================================================
 top_col1, top_col2 = st.columns([1, 1])
 
@@ -201,21 +176,15 @@ with top_col1:
 with top_col2:
     st.markdown("### 📊 HTF Alignment Meters")
     htf_cols = st.columns(4)
-    
-    # मीटर डिजाइन 5M से 4H टाइमफ्रेम के लिए
-    with htf_cols[0]: 
-        st.markdown('<div class="meter-card"><div class="timeframe-title">⏳ 5M</div><span class="sell-text">🔴 STRONG SELL</span><div class="meter-bar-bg"><div class="meter-fill-sell"></div></div></div>', unsafe_allow_html=True)
-    with htf_cols[1]: 
-        st.markdown('<div class="meter-card"><div class="timeframe-title">⏳ 15M</div><span class="sell-text">🔴 SELL</span><div class="meter-bar-bg"><div class="meter-fill-sell" style="width:65%;"></div></div></div>', unsafe_allow_html=True)
-    with htf_cols[2]: 
-        st.markdown('<div class="meter-card"><div class="timeframe-title">⏳ 1H</div><span class="neutral-text">⚪ NEUTRAL</span><div class="meter-bar-bg"><div class="meter-fill-neut"></div></div></div>', unsafe_allow_html=True)
-    with htf_cols[3]: 
-        st.markdown('<div class="meter-card"><div class="timeframe-title">⏳ 4H</div><span class="buy-text">🟢 BUY</span><div class="meter-bar-bg"><div class="meter-fill-buy"></div></div></div>', unsafe_allow_html=True)
+    with htf_cols[0]: st.markdown('<div class="meter-card"><div class="timeframe-title">⏳ 5M</div><span class="sell-text">🔴 STRONG SELL</span><div class="meter-bar-bg"><div class="meter-fill-sell"></div></div></div>', unsafe_allow_html=True)
+    with htf_cols[1]: st.markdown('<div class="meter-card"><div class="timeframe-title">⏳ 15M</div><span class="sell-text">🔴 SELL</span><div class="meter-bar-bg"><div class="meter-fill-sell" style="width:65%;"></div></div></div>', unsafe_allow_html=True)
+    with htf_cols[2]: st.markdown('<div class="meter-card"><div class="timeframe-title">⏳ 1H</div><span class="neutral-text">⚪ NEUTRAL</span><div class="meter-bar-bg"><div class="meter-fill-neut"></div></div></div>', unsafe_allow_html=True)
+    with htf_cols[3]: st.markdown('<div class="meter-card"><div class="timeframe-title">⏳ 4H</div><span class="buy-text">🟢 BUY</span><div class="meter-bar-bg"><div class="meter-fill-buy"></div></div></div>', unsafe_allow_html=True)
 
 st.write("---")
 
 # =====================================================================
-# 6. AI TRADER ENGINE & DYNAMIC NEWS INTERPRETER
+# 6. AI TRADER ENGINE & DYNAMIC NEWS INTERPRETER (LINE BREAK FIXED)
 # =====================================================================
 @st.cache_data(ttl=1800)
 def generate_pro_ai_analysis(news_data, live_spot):
@@ -255,21 +224,28 @@ def generate_pro_ai_analysis(news_data, live_spot):
     [Warning to check lower timeframe CHoCH before entry in Hindi.]
     """
 
+    # 🚨 जेमिनी को साफ़ हिदायत कि हर पॉइंट के अंत में नई लाइन (\n\n) का उपयोग करे
     prompt_interpreter = f"""
     You are an expert global macro analyst. You MUST analyze ALL 5 stories provided in the list below sequentially. Do not skip any story.
-    For each news item, write strictly in Hindi script (Devanagari font) and explicitly mention laymen-friendly direction (🚀 BULLISH / 📉 BEARISH / ⚪ NEUTRAL) for Gold, Indian Market, and other Major Forex Pairs (like USDJPY, EURUSD, GBPUSD based on the macro context).
+    For each news item, write strictly in Hindi script (Devanagari font). 
+    CRITICAL: Write each impact point on a completely new line. Do not combine them into a single paragraph.
 
     ### 🔍 AI News Interpreter & Market Impact Panel
 
-    **📌 न्यूज़ हेडलाइन:** [Exact headline from the list]
-    - आसान शब्दों में मतलब: [Explain in simple Hindi what this news means]
-    - Forex (Gold/Dollar) पर असर: [🚀 BULLISH (तेजी) / 📉 BEARISH (मंदी) / ⚪ NEUTRAL - Simple Hindi explanation]
-    - Other Major Pairs पर असर: [State specific pairs like USDJPY, EURUSD, or GBPUSD and mark them 🚀 BULLISH or 📉 BEARISH with a 1-line reason in simple Hindi]
-    - Indian Market (Nifty/Bank Nifty) पर असर: [🚀 BULLISH (तेजी) / 📉 BEARISH (मंदी) / ⚪ NEUTRAL - Simple Hindi explanation]
-    - असर का लेवल (Impact Level): [🔴 High / 🟡 Medium / 🟢 Low]
+    **📌 न्यूज़ हेडライン:** [Exact headline from the list]
+
+    आसान शब्दों में मतलब: [Explain in simple Hindi what this news means]
+
+    Forex (Gold/Dollar) पर असर: [🚀 BULLISH (तेजी) / 📉 BEARISH (मंदी) / ⚪ NEUTRAL - Simple Hindi explanation]
+
+    Other Major Pairs पर असर: [State specific pairs like USDJPY, EURUSD, or GBPUSD and mark them 🚀 BULLISH or 📉 BEARISH with a 1-line reason in simple Hindi]
+
+    Indian Market (Nifty/Bank Nifty) पर असर: [🚀 BULLISH (तेजी) / 📉 BEARISH (मंदी) / ⚪ NEUTRAL - Simple Hindi explanation]
+
+    असर का लेवल (Impact Level): [🔴 High / 🟡 Medium / 🟢 Low]
 
     ---
-    (Generate exactly 5 blocks matching the 5 stories below)
+    (Generate exactly 5 blocks matching the 5 stories below, leaving empty lines between every impact criteria)
 
     Stories list:
     {context_payload}
@@ -294,6 +270,7 @@ def generate_pro_ai_analysis(news_data, live_spot):
 - **Take Profit 1 (TP1):** {live_spot - 10:.2f}
         """
         
+        # 🚨 फॉलबैक ब्लॉक के अंदर डबल न्यू-लाइन (\n\n) देकर एक के नीचे एक आना पक्का किया
         fallback_blocks = []
         for item in news_data[:5]:
             is_high = "High" in item["impact"]
@@ -302,10 +279,15 @@ def generate_pro_ai_analysis(news_data, live_spot):
             nifty_imp = "📉 BEARISH (मंदी) - भारतीय बाज़ारों में थोड़ी गिरावट आ सकती है।" if is_high else "⚪ NEUTRAL (कोई खास असर नहीं)।"
             
             block = f"""**📌 न्यूज़ हेडलाइन:** {str(item['title'])}
+
 आसान शब्दों में मतलब: वैश्विक स्तर पर मैक्रो लिक्विडिटी और सेंट्रल बैंक की नीतियों से जुड़ा हुआ मुख्य अपडेट।
+
 Forex (Gold/Dollar) पर असर: {gold_imp}
+
 Other Major Pairs पर असर: {pairs_imp}
+
 Indian Market (Nifty) पर असर: {nifty_imp}
+
 असर का लेवल (Impact Level): {str(item['impact'])}
 
 ---"""
@@ -315,7 +297,7 @@ Indian Market (Nifty) पर असर: {nifty_imp}
         return fallback_main, fallback_interp
 
 # =====================================================================
-# 7. RESPONSIVE DUAL-COLUMN LAYOUT (COMPACT & CLEAN)
+# 7. RESPONSIVE DUAL-COLUMN LAYOUT
 # =====================================================================
 col1, col2 = st.columns([1, 1], gap="medium")
 
