@@ -16,7 +16,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 🚨 यह CSS Streamlit के अपने ओरिजिनल columns को मोबाइल पर एक के नीचे एक कर देगा
+# सिंपल और साफ़ क्लीन स्टाइलिंग (बिना किसी ज़बरदस्ती के लेआउट ब्रेक के)
 st.markdown("""
 <style>
     html, body, [data-testid="stAppViewContainer"] {
@@ -43,25 +43,17 @@ st.markdown("""
     .sell-text { color: #f23645; font-weight: 800; font-size: 15px; }
     .neutral-text { color: #64748b; font-weight: 800; font-size: 15px; }
     
-    /* 🎯 जादुई ट्रिक: मोबाइल स्क्रीन पर Streamlit के हॉरिजॉन्टल कॉलम कंटेनर को वर्टिकल बनाएँ */
     @media (max-width: 768px) {
-        [data-testid="stHorizontalBlock"] {
-            flex-direction: column !important;
-            gap: 15px !important;
-        }
         .block-container {
-            padding-top: 1rem !important;
-            padding-bottom: 1rem !important;
-            padding-left: 0.5rem !important;
-            padding-right: 0.5rem !important;
+            padding-top: 0.8rem !important;
+            padding-bottom: 0.8rem !important;
+            padding-left: 0.4rem !important;
+            padding-right: 0.4rem !important;
         }
         h1 { font-size: 20px !important; }
         h2 { font-size: 18px !important; }
         h3 { font-size: 15px !important; }
-        
-        iframe {
-            height: 150px !important;
-        }
+        iframe { height: 140px !important; }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -130,7 +122,7 @@ def fetch_gold_news():
     return news_items
 
 # =====================================================================
-# 5. TOP ROW: LIVE SPOT PRICE & HTF ALIGNMENT (AUTO-STACKS ON MOBILE)
+# 5. TOP ROW: LIVE SPOT PRICE & HTF ALIGNMENT
 # =====================================================================
 top_col1, top_col2 = st.columns([1, 1])
 
@@ -157,7 +149,7 @@ with top_col2:
 st.write("---")
 
 # =====================================================================
-# 6. AI TRADER ENGINE & DYNAMIC NEWS INTERPRETER (5 NEWS + MULTI PAIR)
+# 6. AI TRADER ENGINE & DYNAMIC NEWS INTERPRETER
 # =====================================================================
 @st.cache_data(ttl=1800)
 def generate_pro_ai_analysis(news_data, live_spot):
@@ -203,7 +195,7 @@ def generate_pro_ai_analysis(news_data, live_spot):
 
     ### 🔍 AI News Interpreter & Market Impact Panel
 
-    **📌 न्यूज़ हेडलाइन:** [Exact headline from the list]
+    **📌 न्यूज़ हेडライン:** [Exact headline from the list]
     - **आसान शब्दों में मतलब:** [Explain in simple Hindi what this news means]
     - **Forex (Gold/Dollar) पर असर:** [🚀 BULLISH (तेजी) / 📉 BEARISH (मंदी) / ⚪ NEUTRAL - Simple Hindi explanation]
     - **Other Major Pairs पर असर:** [State specific pairs like USDJPY, EURUSD, or GBPUSD and mark them 🚀 BULLISH or 📉 BEARISH with a 1-line reason in simple Hindi]
@@ -253,14 +245,12 @@ def generate_pro_ai_analysis(news_data, live_spot):
         return fallback_main, fallback_interp
 
 # =====================================================================
-# 7. DUAL-COLUMN MAIN DASHBOARD (SAFE IN-BUILT STREAMLIT COLUMNS WITH CSS OVERRIDE)
+# 7. BULLETPROOF TABS LAYOUT (🚨 DEFINITIVE MOBILE FIX)
 # =====================================================================
-# यह कंप्यूटर पर साइड-बाई-साइड रहेगा और मोबाइल पर CSS इसे सीधे सिंगल कॉलम कर देगा
-col1, col2 = st.columns([1, 1], gap="large")
+# मोबाइल पर दोनों सेक्शन्स टैब बटन बन जाएंगे, जिससे विड्थ कभी क्रैश नहीं होगी
+tab1, tab2 = st.tabs(["📰 Live Alpha News Flow", "🤖 Advanced AI Desk"])
 
-with col1:
-    st.header("📰 Live Alpha News Flow")
-    
+with tab1:
     @st.fragment(run_every=60)
     def show_live_news_stream():
         current_news = fetch_gold_news()
@@ -276,9 +266,7 @@ with col1:
                 
     show_live_news_stream()
 
-with col2:
-    st.header("🤖 Advanced AI Desk")
-    
+with tab2:
     if st.button("🔄 Reset & Refresh Terminal", type="primary", use_container_width=True):
         st.cache_data.clear()
         st.rerun()
