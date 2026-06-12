@@ -4,15 +4,18 @@ from groq import Groq
 from deep_translator import GoogleTranslator
 from bs4 import BeautifulSoup
 
-# Page Config
-st.set_page_config(page_title="Wolf Terminal Pro", layout="wide")
+# Page Setup
+st.set_page_config(page_title="Wolf Alpha Terminal", layout="wide")
 
-# --- 1. Client Setup ---
-try:
-    client = Groq(api_key=st.secrets["GROQ_API_KEY"])
-except Exception as e:
-    st.error("API Key missing in Secrets. Please configure!")
-    st.stop()
+# --- 1. Emergency API Loading ---
+# यह कोड पक्का काम करेगा चाहे Secrets में कुछ भी हो
+def get_groq_client():
+    key_from_secrets = st.secrets.get("GROQ_API_KEY")
+    # अगर सीक्रेट्स वाला नहीं मिला, तो डायरेक्ट की का इस्तेमाल करेगा
+    final_key = key_from_secrets if key_from_secrets else "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"
+    return Groq(api_key=final_key)
+
+client = get_groq_client()
 
 # --- 2. Translation Engine ---
 def translate_to_hindi(text):
@@ -31,10 +34,8 @@ def get_news():
     except:
         return []
 
-# --- 4. Main Dashboard UI ---
+# --- 4. UI Layout ---
 st.title("⚡ Wolf Alpha Terminal | XAU/USD")
-st.write("---")
-
 col1, col2 = st.columns([1, 1])
 
 with col1:
@@ -47,20 +48,15 @@ with col1:
 with col2:
     st.header("🤖 AI Market Intelligence")
     if st.button("🚀 Analyze Market Bias"):
-        with st.spinner("Analyzing with Groq Llama 3..."):
+        with st.spinner("Processing with Groq..."):
             try:
-                # Prompting for high-impact trading analysis
-                prompt = "Analyze XAUUSD current market news and provide a Bullish/Bearish bias. Give 3 key points for intraday trading. Keep it professional and short."
-                
+                prompt = "Analyze XAUUSD market. Give Bullish/Bearish bias and 3 bullet points for intraday trading in Hindi."
                 completion = client.chat.completions.create(
-                    model="llama3-70b-8192",
+                    model="llama3-8b-8192", # यह मॉडल बहुत फास्ट और स्टेबल है
                     messages=[{"role": "user", "content": prompt}]
                 )
-                
-                raw_response = completion.choices[0].message.content
-                st.markdown(translate_to_hindi(raw_response))
-                
+                st.markdown(completion.choices[0].message.content)
             except Exception as e:
-                st.error("AI engine could not process request.")
+                st.error("AI Error: Check API Key connectivity.")
 
 st.sidebar.success("Wolf Terminal v2.0 Online")
