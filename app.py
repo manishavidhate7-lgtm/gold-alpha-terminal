@@ -8,7 +8,7 @@ import json
 import google.genai as genai
 
 # =====================================================================
-# 1. PAGE SETUP & ULTRA MOBILE-RESPONSIVE UI CONFIG
+# 1. PAGE SETUP & ULTRA CLEAN MOBILE UI CONFIG
 # =====================================================================
 st.set_page_config(
     page_title="XAUUSD Alpha Terminal v2", 
@@ -16,44 +16,45 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# सिंपल और साफ़ क्लीन स्टाइलिंग (बिना किसी ज़बरदस्ती के लेआउट ब्रेक के)
+# पूरी तरह से सेफ और क्लीन रिस्पॉन्सिव स्टाइलिंग
 st.markdown("""
 <style>
     html, body, [data-testid="stAppViewContainer"] {
         background-color: #fafbfc;
     }
     
-    /* एसएमसी लेवल्स के कार्ड्स */
+    /* एसएमसी लेवल्स के कार्ड्स - मोबाइल पर एक के नीचे एक फुल विड्थ में आएंगे */
     .metric-card { 
         background-color: #ffffff; 
-        padding: 10px; 
+        padding: 12px; 
         border-radius: 8px; 
         border: 1px solid #e2e8f0; 
         text-align: center;
         box-shadow: 0px 4px 6px -1px rgba(0, 0, 0, 0.05);
-        margin-bottom: 6px;
+        margin-bottom: 8px;
+        width: 100%;
     }
     .timeframe-title {
-        font-size: 12px;
+        font-size: 13px;
         font-weight: bold;
         color: #64748b;
-        margin-bottom: 2px;
+        margin-bottom: 3px;
     }
-    .buy-text { color: #089981; font-weight: 800; font-size: 15px; }
-    .sell-text { color: #f23645; font-weight: 800; font-size: 15px; }
-    .neutral-text { color: #64748b; font-weight: 800; font-size: 15px; }
+    .buy-text { color: #089981; font-weight: 800; font-size: 16px; }
+    .sell-text { color: #f23645; font-weight: 800; font-size: 16px; }
+    .neutral-text { color: #64748b; font-weight: 800; font-size: 16px; }
     
     @media (max-width: 768px) {
         .block-container {
-            padding-top: 0.8rem !important;
-            padding-bottom: 0.8rem !important;
-            padding-left: 0.4rem !important;
-            padding-right: 0.4rem !important;
+            padding-top: 1rem !important;
+            padding-bottom: 1rem !important;
+            padding-left: 0.6rem !important;
+            padding-right: 0.6rem !important;
         }
-        h1 { font-size: 20px !important; }
+        h1 { font-size: 22px !important; }
         h2 { font-size: 18px !important; }
-        h3 { font-size: 15px !important; }
-        iframe { height: 140px !important; }
+        h3 { font-size: 16px !important; }
+        iframe { height: 150px !important; }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -122,35 +123,37 @@ def fetch_gold_news():
     return news_items
 
 # =====================================================================
-# 5. TOP ROW: LIVE SPOT PRICE & HTF ALIGNMENT
+# 5. BLOCK 1: LIVE SPOT PRICE (FULL WIDTH)
 # =====================================================================
-top_col1, top_col2 = st.columns([1, 1])
+st.markdown("### 🚀 XAU/USD Live Spot Price")
+tv_ticker_html = """
+<div class="tradingview-widget-container">
+  <div class="tradingview-widget-container__widget"></div>
+  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>
+  {"symbol": "OANDA:XAUUSD", "width": "100%", "isTransparent": false, "colorTheme": "light", "locale": "en"}
+  </script>
+</div>
+"""
+components.html(tv_ticker_html, height=140)
 
-with top_col1:
-    st.markdown("### 🚀 XAU/USD Live Spot Price")
-    tv_ticker_html = """
-    <div class="tradingview-widget-container">
-      <div class="tradingview-widget-container__widget"></div>
-      <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>
-      {"symbol": "OANDA:XAUUSD", "width": "100%", "isTransparent": false, "colorTheme": "light", "locale": "en"}
-      </script>
-    </div>
-    """
-    components.html(tv_ticker_html, height=140)
-
-with top_col2:
-    st.markdown("### 📊 HTF Alignment")
-    htf_cols = st.columns(4)
-    with htf_cols[0]: st.markdown('<div class="metric-card"><div class="timeframe-title">⏳ 5M</div><span class="sell-text">🔴 SELL</span></div>', unsafe_allow_html=True)
-    with htf_cols[1]: st.markdown('<div class="metric-card"><div class="timeframe-title">⏳ 15M</div><span class="sell-text">🔴 SELL</span></div>', unsafe_allow_html=True)
-    with htf_cols[2]: st.markdown('<div class="metric-card"><div class="timeframe-title">⏳ 1H</div><span class="neutral-text">⚪ NEUT</span></div>', unsafe_allow_html=True)
-    with htf_cols[3]: st.markdown('<div class="metric-card"><div class="timeframe-title">⏳ 4H</div><span class="buy-text">🟢 BUY</span></div>', unsafe_allow_html=True)
+# =====================================================================
+# 6. BLOCK 2: HTF ALIGNMENT (SINGLE COLUMN ON MOBILE / FLEXIBLE GRID)
+# =====================================================================
+st.markdown("### 📊 HTF Alignment")
+# यहाँ हमने st.columns हटा दिया ताकि मोबाइल पर डिब्बे सीधे एक के नीचे एक साफ़ दिखें
+st.markdown('<div class="metric-card"><div class="timeframe-title">⏳ 5M</div><span class="sell-text">🔴 SELL</span></div>', unsafe_allow_html=True)
+st.markdown('<div class="metric-card"><div class="timeframe-title">⏳ 15M</div><span class="sell-text">🔴 SELL</span></div>', unsafe_allow_html=True)
+st.markdown('<div class="metric-card"><div class="timeframe-title">⏳ 1H</div><span class="neutral-text">⚪ NEUT</span></div>', unsafe_allow_html=True)
+st.markdown('<div class="metric-card"><div class="timeframe-title">⏳ 4H</div><span class="buy-text">🟢 BUY</span></div>', unsafe_allow_html=True)
 
 st.write("---")
 
 # =====================================================================
-# 6. AI TRADER ENGINE & DYNAMIC NEWS INTERPRETER
+# 7. AI PRE-CALCULATION & NEWS FETCH
 # =====================================================================
+live_spot_value = get_live_gold_price_backup()
+static_news = fetch_gold_news()
+
 @st.cache_data(ttl=1800)
 def generate_pro_ai_analysis(news_data, live_spot):
     if not client:
@@ -195,7 +198,7 @@ def generate_pro_ai_analysis(news_data, live_spot):
 
     ### 🔍 AI News Interpreter & Market Impact Panel
 
-    **📌 न्यूज़ हेडライン:** [Exact headline from the list]
+    **📌 न्यूज़ हेडलाइन:** [Exact headline from the list]
     - **आसान शब्दों में मतलब:** [Explain in simple Hindi what this news means]
     - **Forex (Gold/Dollar) पर असर:** [🚀 BULLISH (तेजी) / 📉 BEARISH (मंदी) / ⚪ NEUTRAL - Simple Hindi explanation]
     - **Other Major Pairs पर असर:** [State specific pairs like USDJPY, EURUSD, or GBPUSD and mark them 🚀 BULLISH or 📉 BEARISH with a 1-line reason in simple Hindi]
@@ -245,44 +248,43 @@ def generate_pro_ai_analysis(news_data, live_spot):
         return fallback_main, fallback_interp
 
 # =====================================================================
-# 7. BULLETPROOF TABS LAYOUT (🚨 DEFINITIVE MOBILE FIX)
+# 8. BLOCK 3: 🤖 ADVANCED AI DESK (TOP PRIORITY ON MOBILE)
 # =====================================================================
-# मोबाइल पर दोनों सेक्शन्स टैब बटन बन जाएंगे, जिससे विड्थ कभी क्रैश नहीं होगी
-tab1, tab2 = st.tabs(["📰 Live Alpha News Flow", "🤖 Advanced AI Desk"])
+st.header("🤖 Advanced AI Desk")
 
-with tab1:
-    @st.fragment(run_every=60)
-    def show_live_news_stream():
-        current_news = fetch_gold_news()
-        st.caption(f"🔄 Auto-Refreshing: {time.strftime('%H:%M:%S')} (Every 60s)")
-        
-        for item in current_news:
-            with st.container(border=True):
-                st.subheader(item["title"])
-                st.caption(f"📅 {item['published']}")
-                st.markdown(f"**Context:** {item['summary']}")
-                st.markdown(f"**Impact:** {item['impact']} | **Gold:** `{item['reaction']}`")
-                st.markdown(f"[Source Link]({item['link']})")
-                
-    show_live_news_stream()
+if st.button("🔄 Reset & Refresh Terminal", type="primary", use_container_width=True):
+    st.cache_data.clear()
+    st.rerun()
 
-with tab2:
-    if st.button("🔄 Reset & Refresh Terminal", type="primary", use_container_width=True):
-        st.cache_data.clear()
-        st.rerun()
+if not client:
+    st.warning("⚠️ सर्वर तिजोरी (Secrets) में 'GEMINI_API_KEY' डालना बाकी है।")
 
-    live_spot_value = get_live_gold_price_backup()
-    static_news = fetch_gold_news()
+if static_news:
+    with st.spinner("जेमिनी प्रो इंजन लाइव लेवल्स कैलकुलेट कर रहा है..."):
+        ai_main_output, ai_interpreter_output = generate_pro_ai_analysis(static_news, live_spot_value)
+        st.markdown(ai_main_output)
+        st.write("---")
+        with st.container(border=True):
+            st.markdown(ai_interpreter_output)
+
+st.write("---")
+
+# =====================================================================
+# 9. BLOCK 4: 📰 LIVE ALPHA NEWS FLOW (SCROLLS DOWN BELOW AI)
+# =====================================================================
+st.header("📰 Live Alpha News Flow")
+
+@st.fragment(run_every=60)
+def show_live_news_stream():
+    current_news = fetch_gold_news()
+    st.caption(f"🔄 Auto-Refreshing: {time.strftime('%H:%M:%S')} (Every 60s)")
     
-    if not client:
-        st.warning("⚠️ सर्वर तिजोरी (Secrets) में 'GEMINI_API_KEY' डालना बाकी है।")
-    
-    if static_news:
-        with st.spinner("जेमिनी प्रो इंजन लाइव लेवल्स और सभी 5 खबरों का डीप विश्लेषण कैलकुलेट कर रहा है..."):
-            ai_main_output, ai_interpreter_output = generate_pro_ai_analysis(static_news, live_spot_value)
+    for item in current_news:
+        with st.container(border=True):
+            st.subheader(item["title"])
+            st.caption(f"📅 {item['published']}")
+            st.markdown(f"**Context:** {item['summary']}")
+            st.markdown(f"**Impact:** {item['impact']} | **Gold:** `{item['reaction']}`")
+            st.markdown(f"[Source Link]({item['link']})")
             
-            st.markdown(ai_main_output)
-            st.write("---")
-            
-            with st.container(border=True):
-                st.markdown(ai_interpreter_output)
+show_live_news_stream()
