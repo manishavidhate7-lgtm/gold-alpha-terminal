@@ -8,7 +8,7 @@ import json
 import google.genai as genai
 
 # =====================================================================
-# 1. PAGE SETUP & COMPLETE TEXT COLOR + HEADINGS SIZE FIX
+# 1. PAGE SETUP & FORCE SOLID BLACK FOR ALL TEXT ELEMENTS (LI, UL, H3)
 # =====================================================================
 st.set_page_config(
     page_title="XAUUSD Alpha Terminal v2", 
@@ -16,37 +16,39 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# हेडिंग्स का साइज छोटा करके सिर्फ बोल्ड रखने का CSS
+# 🚨 यहाँ CSS को और आक्रामक (Aggressive) बना दिया है ताकि बुलेट पॉइंट्स (li) का रंग भी काला ही रहे
 st.markdown("""
 <style>
     html, body, [data-testid="stAppViewContainer"] {
-        background-color: #fafbfc;
+        background-color: #fafbfc !important;
     }
     
-    /* 1. न्यूज़ सेक्शन और जनरल टेक्स्ट कलर फिक्स */
+    /* सभी तरह के टेक्स्ट, पैराग्राफ, लिस्ट और हेडिंग्स को सॉलिड गहरा काला फिक्स करना */
     [data-testid="stContentBlock"] h1, 
     [data-testid="stContentBlock"] h2, 
     [data-testid="stContentBlock"] h3, 
     [data-testid="stContentBlock"] p,
-    .stMarkdown p, .stMarkdown h3 {
+    [data-testid="stContentBlock"] li,
+    .stMarkdown p, .stMarkdown h3, .stMarkdown li, .stMarkdown ul {
         color: #1e293b !important;
     }
     
-    /* 2. हेडिंग्स का साइज छोटा करके सिर्फ नॉर्मल बोल्ड फॉन्ट सेट करना */
+    /* एआई डेस्क के कंटेनर के अंदर मौजूद एक-एक लिस्ट आइटम (Bullet Points) का कलर फिक्स */
+    .ai-box-container, .ai-box-container p, .ai-box-container li, .ai-box-container ul,
+    .ai-box-container h1, .ai-box-container h2, .ai-box-container h3, 
+    .ai-box-container strong, .ai-box-container span {
+        color: #1e293b !important;
+        font-size: 14px !important;
+    }
+    
+    /* हेडिंग्स को छोटा और केवल बोल्ड रखने के लिए स्टाइल */
     .stMarkdown h1, .stMarkdown h2, .stMarkdown h3,
     .ai-box-container h1, .ai-box-container h2, .ai-box-container h3 {
         font-size: 15px !important;
         font-weight: 800 !important;
-        margin-top: 12px !important;
-        margin-bottom: 6px !important;
+        margin-top: 10px !important;
+        margin-bottom: 5px !important;
         color: #1e293b !important;
-    }
-    
-    /* एआई डेस्क का टेक्स्ट और लिस्ट कलर फिक्स */
-    .ai-box-container, .ai-box-container p, .ai-box-container li, 
-    .ai-box-container strong, .ai-box-container span {
-        color: #1e293b !important;
-        font-size: 14px !important;
     }
     
     /* एसएमसी लेवल्स के कार्ड्स */
@@ -219,11 +221,11 @@ def generate_pro_ai_analysis(news_data, live_spot):
     ### 🔍 AI News Interpreter & Market Impact Panel
 
     **📌 न्यूज़ हेडलाइन:** [Exact headline from the list]
-    - **आसान शब्दों में मतलब:** [Explain in simple Hindi what this news means]
-    - **Forex (Gold/Dollar) पर असर:** [🚀 BULLISH (तेजी) / 📉 BEARISH (मंदी) / ⚪ NEUTRAL - Simple Hindi explanation]
-    - **Other Major Pairs पर असर:** [State specific pairs like USDJPY, EURUSD, or GBPUSD and mark them 🚀 BULLISH or 📉 BEARISH with a 1-line reason in simple Hindi]
-    - **Indian Market (Nifty/Bank Nifty) पर असर:** [🚀 BULLISH (तेजी) / 📉 BEARISH (मंदी) / ⚪ NEUTRAL - Simple Hindi explanation]
-    - **असर का लेवल (Impact Level):** [🔴 High / 🟡 Medium / 🟢 Low]
+    - आसान शब्दों में मतलब: [Explain in simple Hindi what this news means]
+    - Forex (Gold/Dollar) पर असर: [🚀 BULLISH (तेजी) / 📉 BEARISH (मंदी) / ⚪ NEUTRAL - Simple Hindi explanation]
+    - Other Major Pairs पर असर: [State specific pairs like USDJPY, EURUSD, or GBPUSD and mark them 🚀 BULLISH or 📉 BEARISH with a 1-line reason in simple Hindi]
+    - Indian Market (Nifty/Bank Nifty) पर असर: [🚀 BULLISH (तेजी) / 📉 BEARISH (मंदी) / ⚪ NEUTRAL - Simple Hindi explanation]
+    - असर का लेवल (Impact Level): [🔴 High / 🟡 Medium / 🟢 Low]
 
     ---
     (Generate exactly 5 blocks matching the 5 stories below)
@@ -251,7 +253,6 @@ def generate_pro_ai_analysis(news_data, live_spot):
 - **Take Profit 1 (TP1):** {live_spot - 10:.2f}
         """
         
-        # 🚨 यहाँ फॉलबैक स्ट्रक्चर को पूरी तरह से फुल-प्रूफ एरे (List) में बदल दिया है
         fallback_blocks = []
         for item in news_data[:5]:
             is_high = "High" in item["impact"]
@@ -259,12 +260,13 @@ def generate_pro_ai_analysis(news_data, live_spot):
             pairs_imp = "🚀 USDJPY BULLISH (डॉलर मजबूत) | 📉 EURUSD BEARISH (यूरो कमजोर)" if is_high else "📉 USDJPY BEARISH (येन मजबूत) | 🚀 GBPUSD BULLISH"
             nifty_imp = "📉 BEARISH (मंदी) - भारतीय बाज़ारों में थोड़ी गिरावट आ सकती है।" if is_high else "⚪ NEUTRAL (कोई खास असर नहीं)।"
             
+            # 🚨 यहाँ से बुलेट मार्क हटा दिए हैं ताकि स्ट्रीमलिट का डिफ़ॉल्ट सफ़ेद कलर ट्रिगर ही न हो
             block = f"""**📌 न्यूज़ हेडलाइन:** {str(item['title'])}
-* **आसान शब्दों में मतलब:** वैश्विक स्तर पर मैक्रो लिक्विडिटी और सेंट्रल बैंक की नीतियों से जुड़ा हुआ मुख्य अपडेट।
-* **Forex (Gold/Dollar) पर असर:** {gold_imp}
-* **Other Major Pairs पर असर:** {pairs_imp}
-* **Indian Market (Nifty) पर असर:** {nifty_imp}
-* **असर का लेवल (Impact Level):** {str(item['impact'])}
+आसान शब्दों में मतलब: वैश्विक स्तर पर मैक्रो लिक्विडिटी और सेंट्रल बैंक की नीतियों से जुड़ा हुआ मुख्य अपडेट।
+Forex (Gold/Dollar) पर असर: {gold_imp}
+Other Major Pairs पर असर: {pairs_imp}
+Indian Market (Nifty) पर असर: {nifty_imp}
+असर का लेवल (Impact Level): {str(item['impact'])}
 
 ---"""
             fallback_blocks.append(block)
@@ -287,7 +289,8 @@ with col1:
         
         for item in current_news:
             with st.container(border=True):
-                st.subheader(item["title"])
+                # 🚨 st.subheader हटाकर सीधे मूनमार्कडाउन फिक्स किया ताकि न्यूज़ टाइटल गायब न हो
+                st.markdown(f"**📢 {item['title']}**")
                 st.caption(f"📅 {item['published']}")
                 st.markdown(f"**Context:** {item['summary']}")
                 st.markdown(f"**Impact:** {item['impact']} | **Gold:** `{item['reaction']}`")
@@ -313,13 +316,8 @@ with col2:
             ai_main_output, ai_interpreter_output = generate_pro_ai_analysis(static_news, live_spot_value)
             
             st.markdown(f'<div class="ai-box-container">', unsafe_allow_html=True)
-            
-            # मेन आउटपुट रेंडर
             st.markdown(ai_main_output)
             st.write("---")
-            
-            # इंटरप्रिटेशन आउटपुट को एकदम क्लीन मार्कडाउन ब्लॉक में रेंडर कर रहे हैं
             with st.container(border=True):
                 st.markdown(ai_interpreter_output)
-                
             st.markdown('</div>', unsafe_allow_html=True)
