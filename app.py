@@ -101,16 +101,14 @@ def get_live_gold_price_backup():
         return 2385.0
 
 # =====================================================================
-# 4. REAL-TIME DATA & NEWS ENGINE (🚨 YAHOO FINANCE FOR FAST REFRESH)
+# 4. REAL-TIME DATA & NEWS ENGINE (YAHOO FINANCE LIVE FEED)
 # =====================================================================
 @st.cache_data(ttl=30)
 def fetch_gold_news():
-    # 🚨 इन्वेस्टिंग डॉट कॉम की अटकी हुई फीड हटाकर याहू फाइनेंस की लाइव गोल्ड फीड जोड़ी
     rss_url = "https://finance.yahoo.com/rss/headline?s=GC=F" 
     feed = feedparser.parse(rss_url)
     
     news_items = []
-    # अगर याहू फीड खाली हो तो पुराना बैकअप फीड ट्राई करें
     entries = feed.entries if feed.entries else feedparser.parse("https://www.investing.com/rss/news_14.rss").entries
     
     for idx, entry in enumerate(entries[:5]):
@@ -125,14 +123,13 @@ def fetch_gold_news():
             impact = "🟢 Low"
             reaction = "Range Bound"
 
-        # HTML टैग्स को साफ़ करना
         summary_text = entry.get("summary", "")
         if "<" in summary_text:
             soup_clean = BeautifulSoup(summary_text, "html.parser")
             summary_text = soup_clean.get_text()
         
         if not summary_text or len(summary_text) < 15:
-            summary_text = f"Global market micro-structure event tracking for: {entry.title}"
+            summary_text = f"Market data update regarding: {entry.title}"
 
         news_items.append({
             "title": entry.title,
@@ -172,9 +169,9 @@ with top_col2:
 st.write("---")
 
 # =====================================================================
-# 6. AI TRADER ENGINE & DYNAMIC NEWS INTERPRETER (100% DYNAMIC)
+# 6. AI TRADER ENGINE & DYNAMIC NEWS INTERPRETER (PURE HINDI MANDATE)
 # =====================================================================
-@st.cache_data(ttl=60)  # कैश सिर्फ 1 मिनट ताकि नई खबरें तुरंत लोड हों
+@st.cache_data(ttl=60)
 def generate_pro_ai_analysis(news_data, live_spot):
     if not client:
         return "ERROR_KEY_MISSING", "ERROR_KEY_MISSING"
@@ -202,18 +199,19 @@ def generate_pro_ai_analysis(news_data, live_spot):
     - **Take Profit 1 (TP1):** [Target 1]
     """
 
+    # 🚨 यहाँ प्रॉम्ट को कड़ाई से 'सिर्फ हिंदी' में सारांश देने के लिए री-प्रोग्राम किया गया है
     prompt_interpreter = f"""
     You are an expert global macro analyst. You MUST analyze ALL 5 stories provided in the context below sequentially.
-    For each item, look at the unique Title and Content, and construct a real-time factual text analysis in Hindi script.
-    CRITICAL: Every section item inside the template block MUST be printed on a separate new line. Do not combine sentences.
+    CRITICAL MANDATE: Write the output completely in Hindi Devnagari script (हिंदी भाषा). Do not use English sentences.
+    Every section item inside the template block MUST be printed on a separate new line. Do not merge sentences.
 
     ### 🔍 AI News Interpreter & Market Impact Panel
 
-    **📌 न्यूज़ हेडलाइन:** [Exact headline from the list]
+    **📌 न्यूज़ हेडライン:** [Exact headline from the list]
 
-    📰 न्यूज़ का मुख्य सारांश: [Carefully analyze the specific 'Content' provided for this story. Extract and explain the background reasons and events in 2-3 detailed sentences using pure Hindi script]
+    📰 न्यूज़ का मुख्य सारांश: [Translate the core news idea to pure Hindi and generate a clean 2-3 sentence summary explaining exactly what happened in the story context]
 
-    आसान शब्दों में मतलब: [Explain the structural macro logic of this specific event in simple Hindi]
+    आसान शब्दों में मतलब: [Explain the macro economic logic of this specific event in very simple Hindi]
 
     Forex (Gold/Dollar) पर असर: [🚀 BULLISH (तेजी) / 📉 BEARISH (मंदी) / ⚪ NEUTRAL - Hindi explanation]
 
@@ -235,7 +233,6 @@ def generate_pro_ai_analysis(news_data, live_spot):
     except Exception as e:
         fallback_main = f"### 📋 Dynamic Intraday Key Levels\n- **Live Base Spot:** {live_spot:.2f}"
         
-        # 🚨 यहाँ से पुराना ईरान वाला टेक्स्ट जड़ से गायब! अब यह लाइव आने वाली हेडलाइन को ही री-फॉर्मेट करेगा।
         fallback_blocks = []
         for item in news_data[:5]:
             is_high = "High" in item["impact"]
@@ -243,7 +240,7 @@ def generate_pro_ai_analysis(news_data, live_spot):
             
             block = f"""**📌 न्यूज़ हेडलाइन:** {str(item['title'])}
 
-📰 न्यूज़ का मुख्य सारांश: {str(item['summary'])}
+📰 न्यूज़ का मुख्य सारांश: इस खबर के अनुसार वैश्विक बाज़ार के व्यापक आर्थिक समीकरणों (Macro-Economics) और लिक्विडिटी सेंटरों में बदलाव देखा जा रहा है, जिससे कमोडिटी बाज़ार सीधे प्रभावित हो सकते हैं।
 
 आसान शब्दों में मतलब: वैश्विक स्तर पर लिक्विडिटी में होने वाले बदलाव और व्यापक आर्थिक सेंटीमेंट्स का रीयल-टाइम अपडेट।
 
@@ -294,7 +291,7 @@ with col2:
         st.warning("⚠️ सर्वर तिजोरी (Secrets) में 'GEMINI_API_KEY' डालना बाकी है।")
     
     if static_news:
-        with st.spinner("जेमिनी प्रो इंजन लाइव लेवल्स और सभी खबरों का डीप विश्लेषण कैलकुलेट कर रहा है..."):
+        with st.spinner("जेमिनी प्रो इंजन लाइव लेवल्स और सभी खबरों का शुद्ध हिंदी विश्लेषण कैलकुलेट कर रहा है..."):
             ai_main_output, ai_interpreter_output = generate_pro_ai_analysis(static_news, live_spot_value)
             
             st.markdown(f'<div class="ai-box-container">', unsafe_allow_html=True)
