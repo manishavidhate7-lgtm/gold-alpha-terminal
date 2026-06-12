@@ -162,55 +162,57 @@ with top_col1:
 with top_col2:
     st.markdown("### 📊 HTF Alignment Meters")
     htf_cols = st.columns(4)
-    with htf_cols[0]: st.markdown('<div class="metric-card"><div class="timeframe-title">⏳ 5M</div><span class="sell-text">🔴 STRONG SELL</span><div class="meter-bar-bg"><div class="meter-fill-sell"></div></div></div>', unsafe_allow_html=True)
-    with htf_cols[1]: st.markdown('<div class="metric-card"><div class="timeframe-title">⏳ 15M</div><span class="sell-text">🔴 SELL</span><div class="meter-bar-bg"><div class="meter-fill-sell" style="width:65%;"></div></div></div>', unsafe_allow_html=True)
-    with htf_cols[2]: st.markdown('<div class="metric-card"><div class="timeframe-title">⏳ 1H</div><span class="neutral-text">⚪ NEUTRAL</span><div class="meter-bar-bg"><div class="meter-fill-neut"></div></div></div>', unsafe_allow_html=True)
-    with htf_cols[3]: st.markdown('<div class="metric-card"><div class="timeframe-title">⏳ 4H</div><span class="buy-text">🟢 BUY</span><div class="meter-bar-bg"><div class="meter-fill-buy"></div></div></div>', unsafe_allow_html=True)
+    with htf_cols[0]: st.markdown('<div class="meter-card"><div class="timeframe-title">⏳ 5M</div><span class="sell-text">🔴 STRONG SELL</span><div class="meter-bar-bg"><div class="meter-fill-sell"></div></div></div>', unsafe_allow_html=True)
+    with htf_cols[1]: st.markdown('<div class="meter-card"><div class="timeframe-title">⏳ 15M</div><span class="sell-text">🔴 SELL</span><div class="meter-bar-bg"><div class="meter-fill-sell" style="width:65%;"></div></div></div>', unsafe_allow_html=True)
+    with htf_cols[2]: st.markdown('<div class="meter-card"><div class="timeframe-title">⏳ 1H</div><span class="neutral-text">⚪ NEUTRAL</span><div class="meter-bar-bg"><div class="meter-fill-neut"></div></div></div>', unsafe_allow_html=True)
+    with htf_cols[3]: st.markdown('<div class="meter-card"><div class="timeframe-title">⏳ 4H</div><span class="buy-text">🟢 BUY</span><div class="meter-bar-bg"><div class="meter-fill-buy"></div></div></div>', unsafe_allow_html=True)
 
 st.write("---")
 
 # =====================================================================
-# 6. AI DESK ENGINE (🚨 ATTENTION-BIAS FIX: EXTREME HINDI CONSTRAINT)
+# 6. AI DESK ENGINE (🚨 CORRECT GOOGLE-GENAI SDK CONFIG FIX)
 # =====================================================================
 @st.cache_data(ttl=60)
 def generate_isolated_interpretation(title, content):
     if not client:
         return "AI Engine Offline"
         
-    # प्रॉम्ट को पूरी तरह हिंदी निर्देशों से भर दिया ताकि मॉडल का ध्यान न भटके
     prompt = f"""
-    दिए गए डेटा का केवल हिंदी भाषा में ही आउटपुट देना है। अंग्रेजी का एक भी वाक्य नहीं होना चाहिए।
-    डेटा यहाँ है:
-    डेटा_शीर्षक: {title}
-    डेटा_विवरण: {content}
+    तुम्हें इस अंग्रेजी खबर का अनुवाद नहीं करना है, बल्कि इसका गहन विश्लेषण पूरी तरह से हिंदी भाषा में लिखना है।
+    अंग्रेजी वाक्यों का प्रयोग बिल्कुल न करें।
+    
+    खबर की जानकारी:
+    शीर्षक: {title}
+    सामग्री: {content}
     """
     
-    sys_instruction = (
-        "CRITICAL RULE: You must write every single sentence in Hindi language using Devanagari script. "
-        "You are strictly forbidden from writing responses in English. Even if the input text is in English, "
-        "your analysis must be 100% in Hindi. Never use English sentences. "
-        "Generate your response in Hindi using this exact template format:\n\n"
-        "📌 **न्यूज़ हेडलाइन:** [अंग्रेजी हेडलाइन का हिंदी अनुवाद यहाँ लिखें]\n\n"
-        "📰 **न्यूज़ का मुख्य सारांश:** [इस खबर का पूरा मतलब और विश्लेषण हिंदी में 2-3 वाक्यों में समझाएं]\n\n"
-        "💡 **आसान शब्दों में मतलब:** [ट्रेडिंग के नजरिए से इसका क्या अर्थ है, हिंदी में लिखें]\n\n"
-        "📈 **Forex (Gold/Dollar) पर असर:** [सोने और डॉलर पर तेजी या मंदी का असर हिंदी में कारण सहित लिखें]\n\n"
-        "💱 **Other Major Pairs पर असर:** [EURUSD या USDJPY पर होने वाला प्रभाव हिंदी में लिखें]\n\n"
-        "🇮🇳 **Indian Market (Nifty/Bank Nifty) पर असर:** [भारतीय बाजारों पर असर हिंदी में समझाएं]"
+    # google-genai SDK के अनुसार एकदम सही कॉन्फ़िगरेशन स्ट्रक्चर
+    config_obj = types.GenerateContentConfig(
+        system_instruction=(
+            "You are an expert global macro financial analyst. You MUST answer exclusively in Hindi using Devanagari script. "
+            "Even though the input news content is in English, your generated text for explanations, summaries, and market impacts "
+            "MUST be written in fluent, professional Hindi words. Do not output any English sentences or English explanations. "
+            "Strictly use this exact markdown structure for your response:\n\n"
+            "📌 **न्यूज़ हेडलाइन:** [अंग्रेजी हेडलाइन का स्पष्ट हिंदी अनुवाद यहाँ लिखें]\n\n"
+            "📰 **न्यूज़ का मुख्य सारांश:** [इस खबर का गहरा विश्लेषण और सारांश हिंदी में 2-3 विस्तृत वाक्यों में समझाएं]\n\n"
+            "💡 **आसान शब्दों में मतलब:** [ट्रेडिंग के नजरिए से इसका क्या अर्थ है, आसान हिंदी में लिखें]\n\n"
+            "📈 **Forex (Gold/Dollar) पर असर:** [तेजी / मंदी / न्यूट्रल - हिंदी में कारण सहित]\n\n"
+            "💱 **Other Major Pairs पर असर:** [USDJPY, EURUSD पर प्रभाव हिंदी में]\n\n"
+            "🇮🇳 **Indian Market (Nifty/Bank Nifty) पर असर:** [भारतीय शेयर बाजार पर असर हिंदी में]"
+        ),
+        temperature=0.1
     )
     
     try:
         response = client.models.generate_content(
             model='gemini-2.5-flash',
             contents=prompt,
-            config=types.GenerateContentConfig(
-                system_instruction=sys_instruction,
-                temperature=0.0,  # 0.0 टेम्परेचर यानी मॉडल को निर्देशों पर बिल्कुल फिक्स कर देना
-                response_mime_type="text/plain"
-            )
+            config=config_obj
         )
         return response.text
     except Exception as e:
-        return f"**📌 न्यूज़ हेडलाइन:** {title}\n\n⚪ विश्लेषण लोड नहीं हो पाया।"
+        # एरर को समझने के लिए आप चाहें तो st.write(e) कर सकते हैं, पर यहाँ फॉलबैक क्लीन रखा है
+        return f"📌 **न्यूज़ हेडलाइन:** {title}\n\n📰 न्यूज़ का मुख्य सारांश: {content}\n\n⚪ विश्लेषण अस्थाई रूप से उपलब्ध नहीं है।"
 
 @st.cache_data(ttl=60)
 def generate_smc_grid(news_data, live_spot):
@@ -221,36 +223,36 @@ def generate_smc_grid(news_data, live_spot):
     for idx, item in enumerate(news_data, 1):
         context_payload += f"News {idx}: {item['title']}\n"
         
-    prompt_main = f"Calculate technical SMC levels for price: ${live_spot:.2f} using context: {context_payload}"
+    prompt_main = f"Calculate technical SMC levels for Gold spot price: ${live_spot:.2f} based on this market context: {context_payload}"
     
-    sys_instruction_main = (
-        "You are a professional trader. You must answer exclusively in Hindi script (Devanagari). "
-        "Do not use English sentences or English words for descriptions. Format exactly like this:\n\n"
-        "### 📋 लाइव इंट्राडे मुख्य लेवल्स (SMC ग्रिड)\n"
-        "- **PDH (पिछले दिन का हाई):** $[Calculate and print Level]\n"
-        "- **PDL (पिछले दिन का लो):** $[Calculate and print Level]\n"
-        "- **रेसिस्टेंस 1 (R1):** $[Calculate Level]\n"
-        "- **सपोर्ट 1 (S1):** $[Calculate Level]\n\n"
-        "### 🎯 लाइव ट्रेड सेटअप (ऐक्शन प्लान)\n"
-        "- **आज का इंट्राडे झुकाव (Bias):** [तेजी / मंदी / न्यूट्रल]\n"
-        "- **एंट्री ज़ोन (Entry Zone):** $[Zone range in numbers]\n"
-        "- **स्टॉप लॉस (SL):** $[Level]\n"
-        "- **टारगेट 1 (TP1):** $[Level]"
+    config_obj_main = types.GenerateContentConfig(
+        system_instruction=(
+            "You are a professional Smart Money Concepts (SMC) trader. You must generate the entire trading levels grid "
+            "and tactical action plan in Hindi script only. Do not use English words or sentences for descriptions. "
+            "Format exactly like this:\n\n"
+            "### 📋 लाइव इंट्राडे मुख्य लेवल्स (SMC ग्रिड)\n"
+            "- **PDH (पिछले दिन का हाई):** $[कैलकुलेट करके लेवल लिखें]\n"
+            "- **PDL (पिछले दिन का लो):** $[कैलकुलेट करके लेवल लिखें]\n"
+            "- **रेसिस्टेंस 1 (R1):** $[लेवल]\n"
+            "- **सपोर्ट 1 (S1):** $[लेवल]\n\n"
+            "### 🎯 लाइव ट्रेड सेटअप (ऐक्शन प्लान)\n"
+            "- **आज का इंट्राडे झुकाव (Bias):** [तेजी (Bullish) / मंदी (Bearish) / न्यूट्रल]\n"
+            "- **एंट्री ज़ोन (Entry Zone):** $[संख्याओं में रेंज लिखो]\n"
+            "- **स्टॉप लॉस (SL):** $[लेवल]\n"
+            "- **टारगेट 1 (TP1):** $[लेवल]"
+        ),
+        temperature=0.1
     )
     
     try:
         response = client.models.generate_content(
             model='gemini-2.5-flash',
             contents=prompt_main,
-            config=types.GenerateContentConfig(
-                system_instruction=sys_instruction_main,
-                temperature=0.0,
-                response_mime_type="text/plain"
-            )
+            config=config_obj_main
         )
         return response.text
-    except:
-        return f"### 📋 Dynamic Intraday Key Levels\n- **Live Base Spot:** {live_spot:.2f}"
+    except Exception as e:
+        return f"### 📋 Dynamic Intraday Key Levels\n- **Live Base Spot:** ${live_spot:.2f}"
 
 # =====================================================================
 # 7. RESPONSIVE DUAL-COLUMN LAYOUT
@@ -286,7 +288,7 @@ with col2:
     static_news = fetch_gold_news()
     
     if not client:
-        st.warning("⚠️ सर्ver तिजोरी (Secrets) में 'GEMINI_API_KEY' डालना बाकी है।")
+        st.warning("⚠️ सर्वर तिजोरी (Secrets) में 'GEMINI_API_KEY' डालना बाकी है।")
     
     if static_news:
         with st.spinner("जेमिनी प्रो इंजन लाइव लेवल्स और सभी खबरों का शुद्ध हिंदी विश्लेषण कैलकुलेट कर रहा है..."):
