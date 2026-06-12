@@ -29,12 +29,8 @@ st.markdown("""
         padding-right: 1rem !important;
         max-width: 98% !important;
     }
-    [data-testid="stVerticalBlock"] {
-        gap: 0.4rem !important;
-    }
-    [data-testid="stHorizontalBlock"] {
-        gap: 0.6rem !important;
-    }
+    [data-testid="stVerticalBlock"] { gap: 0.4rem !important; }
+    [data-testid="stHorizontalBlock"] { gap: 0.6rem !important; }
     
     [data-testid="stContentBlock"] h1, 
     [data-testid="stContentBlock"] h2, 
@@ -44,11 +40,7 @@ st.markdown("""
         color: #1e293b !important;
         line-height: 1.5 !important;
     }
-    
-    .ai-box-container {
-        color: #1e293b !important;
-        font-size: 14px !important;
-    }
+    .ai-box-container { color: #1e293b !important; font-size: 14px !important; }
     
     .stMarkdown h1, .stMarkdown h2, .stMarkdown h3,
     .ai-box-container h1, .ai-box-container h2, .ai-box-container h3 {
@@ -109,34 +101,19 @@ def get_live_gold_price_backup():
         return 2385.0
 
 # =====================================================================
-# 4. ADVANCED SCRAPER (WITH USER-AGENT FIX FOR INVESTING.COM)
+# 4. REAL-TIME DATA & NEWS ENGINE (🚨 YAHOO FINANCE FOR FAST REFRESH)
 # =====================================================================
-def extract_full_article_text(article_url):
-    try:
-        req = urllib.request.Request(
-            article_url, 
-            headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
-        )
-        with urllib.request.urlopen(req, timeout=4) as response:
-            soup = BeautifulSoup(response.read(), "html.parser")
-            paragraphs = soup.find_all('p')
-            full_text = " ".join([p.get_text() for p in paragraphs if len(p.get_text()) > 30])
-            if len(full_text) > 150:
-                return full_text[:2500]
-    except:
-        pass
-    return "NO_SCRAPE_DATA"
-
-# =====================================================================
-# 5. REAL-TIME DATA & NEWS ENGINE
-# =====================================================================
-@st.cache_data(ttl=60)
+@st.cache_data(ttl=30)
 def fetch_gold_news():
-    rss_url = "https://www.investing.com/rss/news_14.rss" 
+    # 🚨 इन्वेस्टिंग डॉट कॉम की अटकी हुई फीड हटाकर याहू फाइनेंस की लाइव गोल्ड फीड जोड़ी
+    rss_url = "https://finance.yahoo.com/rss/headline?s=GC=F" 
     feed = feedparser.parse(rss_url)
     
     news_items = []
-    for idx, entry in enumerate(feed.entries[:5]):
+    # अगर याहू फीड खाली हो तो पुराना बैकअप फीड ट्राई करें
+    entries = feed.entries if feed.entries else feedparser.parse("https://www.investing.com/rss/news_14.rss").entries
+    
+    for idx, entry in enumerate(entries[:5]):
         title_lower = entry.title.lower()
         if any(w in title_lower for w in ["fed", "cpi", "nfp", "powell", "rate", "inflation", "hiking", "banks"]):
             impact = "🔴 High"
@@ -148,19 +125,18 @@ def fetch_gold_news():
             impact = "🟢 Low"
             reaction = "Range Bound"
 
-        # HTML क्लीनिंग
+        # HTML टैग्स को साफ़ करना
         summary_text = entry.get("summary", "")
         if "<" in summary_text:
-            summary_text = summary_text.split("<")[0].strip()
-        if not summary_text or len(summary_text) < 10:
-            summary_text = "Global market liquidity flow adjustments are ongoing near major support zones."
-
-        full_article = extract_full_article_text(entry.link)
+            soup_clean = BeautifulSoup(summary_text, "html.parser")
+            summary_text = soup_clean.get_text()
+        
+        if not summary_text or len(summary_text) < 15:
+            summary_text = f"Global market micro-structure event tracking for: {entry.title}"
 
         news_items.append({
             "title": entry.title,
-            "summary": summary_text,
-            "full_news": full_article,
+            "summary": summary_text.strip(),
             "link": entry.link,
             "published": entry.get("published", "Recent Window"),
             "impact": impact,
@@ -169,7 +145,7 @@ def fetch_gold_news():
     return news_items
 
 # =====================================================================
-# 6. TOP ROW: LIVE SPOT PRICE & HTF ALIGNMENT
+# 5. TOP ROW: LIVE SPOT PRICE & HTF ALIGNMENT
 # =====================================================================
 top_col1, top_col2 = st.columns([1, 1])
 
@@ -196,24 +172,22 @@ with top_col2:
 st.write("---")
 
 # =====================================================================
-# 7. AI TRADER ENGINE & DYNAMIC NEWS INTERPRETER (FULLY DYNAMIC)
+# 6. AI TRADER ENGINE & DYNAMIC NEWS INTERPRETER (100% DYNAMIC)
 # =====================================================================
-@st.cache_data(ttl=1800)
+@st.cache_data(ttl=60)  # कैश सिर्फ 1 मिनट ताकि नई खबरें तुरंत लोड हों
 def generate_pro_ai_analysis(news_data, live_spot):
     if not client:
         return "ERROR_KEY_MISSING", "ERROR_KEY_MISSING"
         
     context_payload = ""
     for idx, item in enumerate(news_data, 1):
-        # 🚨 अगर स्क्रैपर ब्लॉक भी हुआ हो, तो बैकअप के लिए 'summary' भेज रहे हैं ताकि डेटा खाली न रहे
-        final_content = item['full_news'] if item['full_news'] != "NO_SCRAPE_DATA" else item['summary']
-        context_payload += f"Story {idx} Title: {item['title']}\nStory {idx} Content: {final_content}\n\n"
+        context_payload += f"Story {idx} Title: {item['title']}\nStory {idx} Content: {item['summary']}\n\n"
         
     prompt_main = f"""
     You are an expert global macro prop trader.
     Current actual live market spot price of XAU/USD Gold right now is: ${live_spot:.2f}.
     Analyze data: {context_payload}
-    Return output EXACTLY in Hindi script.
+    Return output EXACTLY in Hindi script. Do not use English script.
 
     ### 📋 Dynamic Intraday Key Levels (SMC Grid)
     - **PDH (Previous Day High):** [Price slightly above ${live_spot:.2f}]
@@ -230,8 +204,8 @@ def generate_pro_ai_analysis(news_data, live_spot):
 
     prompt_interpreter = f"""
     You are an expert global macro analyst. You MUST analyze ALL 5 stories provided in the context below sequentially.
-    For each item, look at the Title and Content, and construct a real-time factual text analysis in Hindi script.
-    CRITICAL: Every section item inside the template block MUST be printed on a separate new line.
+    For each item, look at the unique Title and Content, and construct a real-time factual text analysis in Hindi script.
+    CRITICAL: Every section item inside the template block MUST be printed on a separate new line. Do not combine sentences.
 
     ### 🔍 AI News Interpreter & Market Impact Panel
 
@@ -261,7 +235,7 @@ def generate_pro_ai_analysis(news_data, live_spot):
     except Exception as e:
         fallback_main = f"### 📋 Dynamic Intraday Key Levels\n- **Live Base Spot:** {live_spot:.2f}"
         
-        # 🚨 फॉलबैक को पूरी तरह डायनेमिक कर दिया ताकि लाइव न्यूज़ का ही डेटा कंपाइल हो
+        # 🚨 यहाँ से पुराना ईरान वाला टेक्स्ट जड़ से गायब! अब यह लाइव आने वाली हेडलाइन को ही री-फॉर्मेट करेगा।
         fallback_blocks = []
         for item in news_data[:5]:
             is_high = "High" in item["impact"]
@@ -284,7 +258,7 @@ Forex (Gold/Dollar) पर असर: {gold_imp}
         return fallback_main, fallback_interp
 
 # =====================================================================
-# 8. RESPONSIVE DUAL-COLUMN LAYOUT
+# 7. RESPONSIVE DUAL-COLUMN LAYOUT
 # =====================================================================
 col1, col2 = st.columns([1, 1], gap="medium")
 
@@ -320,7 +294,7 @@ with col2:
         st.warning("⚠️ सर्वर तिजोरी (Secrets) में 'GEMINI_API_KEY' डालना बाकी है।")
     
     if static_news:
-        with st.spinner("जेमिनी प्रो इंजन लाइव लेवल्स और सभी 5 खबरों का डीप विश्लेषण कैलकुलेट कर रहा है..."):
+        with st.spinner("जेमिनी प्रो इंजन लाइव लेवल्स और सभी खबरों का डीप विश्लेषण कैलकुलेट कर रहा है..."):
             ai_main_output, ai_interpreter_output = generate_pro_ai_analysis(static_news, live_spot_value)
             
             st.markdown(f'<div class="ai-box-container">', unsafe_allow_html=True)
