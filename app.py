@@ -16,7 +16,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# मोबाइल स्क्रीन के लिए एडवांस्ड CSS ओवरराइड्स
+# 🚨 यह CSS Streamlit के अपने ओरिजिनल columns को मोबाइल पर एक के नीचे एक कर देगा
 st.markdown("""
 <style>
     html, body, [data-testid="stAppViewContainer"] {
@@ -43,34 +43,22 @@ st.markdown("""
     .sell-text { color: #f23645; font-weight: 800; font-size: 15px; }
     .neutral-text { color: #64748b; font-weight: 800; font-size: 15px; }
     
-    /* 🚨 मोबाइल रिस्पॉन्सिव फ्लेक्सबॉक्स ग्रिड (यह लेआउट फिक्स करेगा) */
-    .responsive-grid {
-        display: flex;
-        flex-direction: row;
-        gap: 20px;
-        width: 100%;
-    }
-    .responsive-col {
-        flex: 1;
-        min-width: 0;
-    }
-
-    /* मोबाइल स्क्रीन (768px से छोटी) के लिए स्पेशल रूल्स */
+    /* 🎯 जादुई ट्रिक: मोबाइल स्क्रीन पर Streamlit के हॉरिजॉन्टल कॉलम कंटेनर को वर्टिकल बनाएँ */
     @media (max-width: 768px) {
-        .responsive-grid {
-            flex-direction: column !important; /* साइड-बाई-साइड की जगह एक के नीचे एक करेगा */
+        [data-testid="stHorizontalBlock"] {
+            flex-direction: column !important;
+            gap: 15px !important;
         }
         .block-container {
             padding-top: 1rem !important;
             padding-bottom: 1rem !important;
-            padding-left: 0.4rem !important;
-            padding-right: 0.4rem !important;
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
         }
         h1 { font-size: 20px !important; }
         h2 { font-size: 18px !important; }
         h3 { font-size: 15px !important; }
         
-        /* मोबाइल पर ट्रेडिंगव्यू विजेट को पूरा स्पेस देने के लिए */
         iframe {
             height: 150px !important;
         }
@@ -142,7 +130,7 @@ def fetch_gold_news():
     return news_items
 
 # =====================================================================
-# 5. TOP ROW: LIVE SPOT PRICE & HTF ALIGNMENT (RESPONSIVE)
+# 5. TOP ROW: LIVE SPOT PRICE & HTF ALIGNMENT (AUTO-STACKS ON MOBILE)
 # =====================================================================
 top_col1, top_col2 = st.columns([1, 1])
 
@@ -169,7 +157,7 @@ with top_col2:
 st.write("---")
 
 # =====================================================================
-# 6. AI TRADER ENGINE & DYNAMIC NEWS INTERPRETER
+# 6. AI TRADER ENGINE & DYNAMIC NEWS INTERPRETER (5 NEWS + MULTI PAIR)
 # =====================================================================
 @st.cache_data(ttl=1800)
 def generate_pro_ai_analysis(news_data, live_spot):
@@ -265,54 +253,48 @@ def generate_pro_ai_analysis(news_data, live_spot):
         return fallback_main, fallback_interp
 
 # =====================================================================
-# 7. DUAL-COLUMN MAIN DASHBOARD (BUILT WITH RESPONSIVE CSS CONTAINERS)
+# 7. DUAL-COLUMN MAIN DASHBOARD (SAFE IN-BUILT STREAMLIT COLUMNS WITH CSS OVERRIDE)
 # =====================================================================
-# यहाँ हमने ट्रेडिशनल st.columns हटाकर HTML Flexbox ग्रिड इन्जेक्ट किया है
-st.markdown('<div class="responsive-grid">', unsafe_allow_html=True)
+# यह कंप्यूटर पर साइड-बाई-साइड रहेगा और मोबाइल पर CSS इसे सीधे सिंगल कॉलम कर देगा
+col1, col2 = st.columns([1, 1], gap="large")
 
-# ---- LEFT PANEL (NEWS FLOW) ----
-st.markdown('<div class="responsive-col">', unsafe_allow_html=True)
-st.header("📰 Live Alpha News Flow")
-
-@st.fragment(run_every=60)
-def show_live_news_stream():
-    current_news = fetch_gold_news()
-    st.caption(f"🔄 Auto-Refreshing: {time.strftime('%H:%M:%S')} (Every 60s)")
+with col1:
+    st.header("📰 Live Alpha News Flow")
     
-    for item in current_news:
-        with st.container(border=True):
-            st.subheader(item["title"])
-            st.caption(f"📅 {item['published']}")
-            st.markdown(f"**Context:** {item['summary']}")
-            st.markdown(f"**Impact:** {item['impact']} | **Gold:** `{item['reaction']}`")
-            st.markdown(f"[Source Link]({item['link']})")
-            
-show_live_news_stream()
-st.markdown('</div>', unsafe_allow_html=True) # Left Panel End
-
-# ---- RIGHT PANEL (AI DESK) ----
-st.markdown('<div class="responsive-col">', unsafe_allow_html=True)
-st.header("🤖 Advanced AI Desk")
-
-if st.button("🔄 Reset & Refresh Terminal", type="primary", use_container_width=True):
-    st.cache_data.clear()
-    st.rerun()
-
-live_spot_value = get_live_gold_price_backup()
-static_news = fetch_gold_news()
-
-if not client:
-    st.warning("⚠️ सर्वर तिजोरी (Secrets) में 'GEMINI_API_KEY' डालना बाकी है।")
-
-if static_news:
-    with st.spinner("जेमिनी प्रो इंजन लाइव लेवल्स और सभी 5 खबरों का डीप विश्लेषण कैलकुलेट कर रहा है..."):
-        ai_main_output, ai_interpreter_output = generate_pro_ai_analysis(static_news, live_spot_value)
+    @st.fragment(run_every=60)
+    def show_live_news_stream():
+        current_news = fetch_gold_news()
+        st.caption(f"🔄 Auto-Refreshing: {time.strftime('%H:%M:%S')} (Every 60s)")
         
-        st.markdown(ai_main_output)
-        st.write("---")
-        
-        with st.container(border=True):
-            st.markdown(ai_interpreter_output)
+        for item in current_news:
+            with st.container(border=True):
+                st.subheader(item["title"])
+                st.caption(f"📅 {item['published']}")
+                st.markdown(f"**Context:** {item['summary']}")
+                st.markdown(f"**Impact:** {item['impact']} | **Gold:** `{item['reaction']}`")
+                st.markdown(f"[Source Link]({item['link']})")
+                
+    show_live_news_stream()
+
+with col2:
+    st.header("🤖 Advanced AI Desk")
+    
+    if st.button("🔄 Reset & Refresh Terminal", type="primary", use_container_width=True):
+        st.cache_data.clear()
+        st.rerun()
+
+    live_spot_value = get_live_gold_price_backup()
+    static_news = fetch_gold_news()
+    
+    if not client:
+        st.warning("⚠️ सर्वर तिजोरी (Secrets) में 'GEMINI_API_KEY' डालना बाकी है।")
+    
+    if static_news:
+        with st.spinner("जेमिनी प्रो इंजन लाइव लेवल्स और सभी 5 खबरों का डीप विश्लेषण कैलकुलेट कर रहा है..."):
+            ai_main_output, ai_interpreter_output = generate_pro_ai_analysis(static_news, live_spot_value)
             
-st.markdown('</div>', unsafe_allow_html=True) # Right Panel End
-st.markdown('</div>', unsafe_allow_html=True) # Grid End
+            st.markdown(ai_main_output)
+            st.write("---")
+            
+            with st.container(border=True):
+                st.markdown(ai_interpreter_output)
