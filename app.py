@@ -6,7 +6,7 @@ import time
 import urllib.request
 import json
 import google.genai as genai
-from bs4 import BeautifulSoup  # 🚨 पूरी खबर को अंदर से स्क्रैप करने के लिए
+from bs4 import BeautifulSoup
 
 # =====================================================================
 # 1. PAGE SETUP & COMPLETE TEXT COLOR + HEADINGS SIZE FIX
@@ -109,24 +109,26 @@ def get_live_gold_price_backup():
         return 2385.0
 
 # =====================================================================
-# 4. ADVANCED SCRAPER: FETCH FULL ARTICLE CONTENT FROM LINK
+# 4. ADVANCED SCRAPER (WITH USER-AGENT FIX FOR INVESTING.COM)
 # =====================================================================
 def extract_full_article_text(article_url):
-    """🚨 यह फंक्शन न्यूज़ लिंक पर जाकर अंदर का पूरा पैराग्राफ टेक्स्ट खींच लाता है ताकि AI गहरा विश्लेषण कर सके"""
     try:
-        req = urllib.request.Request(article_url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
-        with urllib.request.urlopen(req, timeout=5) as response:
+        req = urllib.request.Request(
+            article_url, 
+            headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
+        )
+        with urllib.request.urlopen(req, timeout=4) as response:
             soup = BeautifulSoup(response.read(), "html.parser")
-            # Investing.com या सामान्य न्यूज़ साइट्स के पैराग्राफ्स निकालना
             paragraphs = soup.find_all('p')
             full_text = " ".join([p.get_text() for p in paragraphs if len(p.get_text()) > 30])
-            # बहुत बड़ा टेक्स्ट होने पर उसे ट्रिम करना ताकि टोकन लिमिट क्रैश न हो
-            return full_text[:2500] if len(full_text) > 100 else "Detailed news content under transition."
+            if len(full_text) > 150:
+                return full_text[:2500]
     except:
-        return "Detailed macro news layout currently fetching through terminal cache."
+        pass
+    return "NO_SCRAPE_DATA"
 
 # =====================================================================
-# 5. REAL-TIME DATA & NEWS ENGINE (WITH FULL SCRAPER INTEGRATION)
+# 5. REAL-TIME DATA & NEWS ENGINE
 # =====================================================================
 @st.cache_data(ttl=60)
 def fetch_gold_news():
@@ -146,15 +148,21 @@ def fetch_gold_news():
             impact = "🟢 Low"
             reaction = "Range Bound"
 
-        # 🚨 ओरिजिनल लिंक से पूरी खबर (Full Article) निकालना
+        # HTML क्लीनिंग
+        summary_text = entry.get("summary", "")
+        if "<" in summary_text:
+            summary_text = summary_text.split("<")[0].strip()
+        if not summary_text or len(summary_text) < 10:
+            summary_text = "Global market liquidity flow adjustments are ongoing near major support zones."
+
         full_article = extract_full_article_text(entry.link)
 
         news_items.append({
             "title": entry.title,
-            "summary": entry.get("summary", "Market liquidity shift under process."),
-            "full_news": full_article,  # <--- अब इसमें पूरी न्यूज़ का बड़ा डेटा है
+            "summary": summary_text,
+            "full_news": full_article,
             "link": entry.link,
-            "published": entry.get("published", "Recent Data Window"),
+            "published": entry.get("published", "Recent Window"),
             "impact": impact,
             "reaction": reaction
         })
@@ -180,15 +188,15 @@ with top_col1:
 with top_col2:
     st.markdown("### 📊 HTF Alignment Meters")
     htf_cols = st.columns(4)
-    with htf_cols[0]: st.markdown('<div class="metric-card"><div class="timeframe-title">⏳ 5M</div><span class="sell-text">🔴 STRONG SELL</span><div class="meter-bar-bg"><div class="meter-fill-sell"></div></div></div>', unsafe_allow_html=True)
-    with htf_cols[1]: st.markdown('<div class="metric-card"><div class="timeframe-title">⏳ 15M</div><span class="sell-text">🔴 SELL</span><div class="meter-bar-bg"><div class="meter-fill-sell" style="width:65%;"></div></div></div>', unsafe_allow_html=True)
-    with htf_cols[2]: st.markdown('<div class="metric-card"><div class="timeframe-title">⏳ 1H</div><span class="neutral-text">⚪ NEUTRAL</span><div class="meter-bar-bg"><div class="meter-fill-neut"></div></div></div>', unsafe_allow_html=True)
-    with htf_cols[3]: st.markdown('<div class="metric-card"><div class="timeframe-title">⏳ 4H</div><span class="buy-text">🟢 BUY</span><div class="meter-bar-bg"><div class="meter-fill-buy"></div></div></div>', unsafe_allow_html=True)
+    with htf_cols[0]: st.markdown('<div class="meter-card"><div class="timeframe-title">⏳ 5M</div><span class="sell-text">🔴 STRONG SELL</span><div class="meter-bar-bg"><div class="meter-fill-sell"></div></div></div>', unsafe_allow_html=True)
+    with htf_cols[1]: st.markdown('<div class="meter-card"><div class="timeframe-title">⏳ 15M</div><span class="sell-text">🔴 SELL</span><div class="meter-bar-bg"><div class="meter-fill-sell" style="width:65%;"></div></div></div>', unsafe_allow_html=True)
+    with htf_cols[2]: st.markdown('<div class="meter-card"><div class="timeframe-title">⏳ 1H</div><span class="neutral-text">⚪ NEUTRAL</span><div class="meter-bar-bg"><div class="meter-fill-neut"></div></div></div>', unsafe_allow_html=True)
+    with htf_cols[3]: st.markdown('<div class="meter-card"><div class="timeframe-title">⏳ 4H</div><span class="buy-text">🟢 BUY</span><div class="meter-bar-bg"><div class="meter-fill-buy"></div></div></div>', unsafe_allow_html=True)
 
 st.write("---")
 
 # =====================================================================
-# 7. AI TRADER ENGINE & DYNAMIC NEWS INTERPRETER (DEEP SUMMARY FIXED)
+# 7. AI TRADER ENGINE & DYNAMIC NEWS INTERPRETER (FULLY DYNAMIC)
 # =====================================================================
 @st.cache_data(ttl=1800)
 def generate_pro_ai_analysis(news_data, live_spot):
@@ -197,8 +205,9 @@ def generate_pro_ai_analysis(news_data, live_spot):
         
     context_payload = ""
     for idx, item in enumerate(news_data, 1):
-        # 🚨 AI को पूरी खबर का बड़ा टेक्स्ट भेजा जा रहा है विश्लेषण के लिए
-        context_payload += f"Story {idx} Title: {item['title']}\nStory {idx} Full Article: {item['full_news']}\n\n"
+        # 🚨 अगर स्क्रैपर ब्लॉक भी हुआ हो, तो बैकअप के लिए 'summary' भेज रहे हैं ताकि डेटा खाली न रहे
+        final_content = item['full_news'] if item['full_news'] != "NO_SCRAPE_DATA" else item['summary']
+        context_payload += f"Story {idx} Title: {item['title']}\nStory {idx} Content: {final_content}\n\n"
         
     prompt_main = f"""
     You are an expert global macro prop trader.
@@ -221,16 +230,16 @@ def generate_pro_ai_analysis(news_data, live_spot):
 
     prompt_interpreter = f"""
     You are an expert global macro analyst. You MUST analyze ALL 5 stories provided in the context below sequentially.
-    For each news item, read the 'Full Article' text very carefully and extract a rich, detailed factual summary in pure Hindi script.
-    CRITICAL: Write each section on a completely new line. Do not merge sentences.
+    For each item, look at the Title and Content, and construct a real-time factual text analysis in Hindi script.
+    CRITICAL: Every section item inside the template block MUST be printed on a separate new line.
 
     ### 🔍 AI News Interpreter & Market Impact Panel
 
     **📌 न्यूज़ हेडलाइन:** [Exact headline from the list]
 
-    📰 न्यूज़ का मुख्य सारांश: [Analyze the provided 'Full Article' text and give a powerful 3-sentence deep summary in Hindi, explaining the core background events, reasons like subsidies/wars, and government actions mentioned in the text]
+    📰 न्यूज़ का मुख्य सारांश: [Carefully analyze the specific 'Content' provided for this story. Extract and explain the background reasons and events in 2-3 detailed sentences using pure Hindi script]
 
-    आसान शब्दों में मतलब: [Explain what this means for macro liquidity and global markets in simple Hindi]
+    आसान शब्दों में मतलब: [Explain the structural macro logic of this specific event in simple Hindi]
 
     Forex (Gold/Dollar) पर असर: [🚀 BULLISH (तेजी) / 📉 BEARISH (मंदी) / ⚪ NEUTRAL - Hindi explanation]
 
@@ -252,16 +261,17 @@ def generate_pro_ai_analysis(news_data, live_spot):
     except Exception as e:
         fallback_main = f"### 📋 Dynamic Intraday Key Levels\n- **Live Base Spot:** {live_spot:.2f}"
         
+        # 🚨 फॉलबैक को पूरी तरह डायनेमिक कर दिया ताकि लाइव न्यूज़ का ही डेटा कंपाइल हो
         fallback_blocks = []
         for item in news_data[:5]:
             is_high = "High" in item["impact"]
-            gold_imp = "📉 BEARISH (मंदी) - डॉलर मजबूत होने से सोने के दाम गिर सकते हैं।" if is_high else "🚀 BULLISH (तेजी) - सोने में खरीदार एक्टिव हो सकते हैं।"
+            gold_imp = "📉 BEARISH (मंदी) - डॉलर इंडेक्स मजबूत होने से सोने पर दबाव।" if is_high else "🚀 BULLISH (तेजी) - सोने में सेफ-हेवन खरीदारी बढ़ने की उम्मीद।"
             
             block = f"""**📌 न्यूज़ हेडलाइन:** {str(item['title'])}
 
-📰 न्यूज़ का मुख्य सारांश: वैश्विक स्तर पर ईरान युद्ध और तेल की बढ़ती कीमतों के कारण वित्तीय घाटा (Fiscal Deficit) बढ़ने की संभावना है। सरकार सब्सिडी लागतों को संतुलित करने के लिए मंत्रालयों के खर्चों में कटौती और राजकोषीय दृष्टिकोण की समीक्षा कर रही है।
+📰 न्यूज़ का मुख्य सारांश: {str(item['summary'])}
 
-आसान शब्दों में मतलब: वैश्विक स्तर पर सेंट्रल बैंक की नीतियों और व्यापक आर्थिक लिक्विडिटी के बदलाव का मुख्य डेटा।
+आसान शब्दों में मतलब: वैश्विक स्तर पर लिक्विडिटी में होने वाले बदलाव और व्यापक आर्थिक सेंटीमेंट्स का रीयल-टाइम अपडेट।
 
 Forex (Gold/Dollar) पर असर: {gold_imp}
 
