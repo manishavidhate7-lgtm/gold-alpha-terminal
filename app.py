@@ -6,7 +6,7 @@ import time
 import urllib.request
 import json
 import google.genai as genai
-from google.genai import types  # 🚨 सिस्टम कॉन्फ़िगरेशन के लिए जरूरी
+from google.genai import types  # सिस्टम कॉन्फ़िगरेशन के लिए अनिवार्य
 from bs4 import BeautifulSoup
 
 # =====================================================================
@@ -170,26 +170,32 @@ with top_col2:
 st.write("---")
 
 # =====================================================================
-# 6. AI DESK ENGINE (🚨 SYSTEM INSTRUCTIONS FORCED HINDI LOGIC)
+# 6. AI DESK ENGINE (🚨 ULTRA-STRICT HINDI ENFORCEMENT)
 # =====================================================================
 @st.cache_data(ttl=60)
 def generate_isolated_interpretation(title, content):
     if not client:
         return "AI Engine Offline"
         
-    prompt = f"Analyze this single news story. Headline: {title}. Content: {content}"
+    prompt = f"""
+    तुम्हें इस अंग्रेजी खबर का अनुवाद नहीं करना है, बल्कि इसका गहन विश्लेषण पूरी तरह से हिंदी भाषा में लिखना है।
     
-    # 🚨 मॉडल को सिस्टम लेवल पर मजबूर करना कि वो सिर्फ हिंदी बोलेगा
+    खबर की जानकारी:
+    शीर्षक (Title): {title}
+    सामग्री (Content): {content}
+    """
+    
     sys_instruction = (
-        "You are a global macro desk analyst. You MUST write your entire output using ONLY "
-        "Hindi script (Devanagari). Under no circumstances are you allowed to reply in English sentences. "
-        "Format your output strictly using these headers in Hindi:\n"
-        "📌 न्यूज़ हेडライン: [Headline in Hindi]\n"
-        "📰 न्यूज़ का मुख्य सारांश: [Summary in Hindi]\n"
-        "आसान शब्दों में मतलब: [Meaning in simple Hindi]\n"
-        "Forex (Gold/Dollar) पर असर: [Impact in Hindi]\n"
-        "Other Major Pairs पर असर: [Impact in Hindi]\n"
-        "Indian Market (Nifty/Bank Nifty) पर असर: [Impact in Hindi]"
+        "You are an expert global macro financial analyst. You MUST answer exclusively in Hindi using Devanagari script. "
+        "Even though the input news content is in English, your generated text for explanations, summaries, and market impacts "
+        "MUST be written in fluent, professional Hindi words. Do not output any English sentences or English explanations. "
+        "Strictly use this exact markdown structure for your response:\n\n"
+        "📌 **न्यूज़ हेडलाइन:** [Translate the headline to clear Hindi here]\n\n"
+        "📰 **न्यूज़ का मुख्य सारांश:** [Write a deep summary and analytical breakdown of the news in 2-3 detailed Hindi sentences]\n\n"
+        "💡 **आसान शब्दों में मतलब:** [Explain the fundamental trading implications simply in Hindi]\n\n"
+        "📈 **Forex (Gold/Dollar) पर असर:** [Bullish/Bearish/Neutral with detailed logic in Hindi]\n\n"
+        "💱 **Other Major Pairs पर असर:** [Impact on USDJPY, EURUSD, GBPUSD in Hindi]\n\n"
+        "🇮🇳 **Indian Market (Nifty/Bank Nifty) पर असर:** [Impact on Indian equity markets in Hindi]"
     )
     
     try:
@@ -198,7 +204,7 @@ def generate_isolated_interpretation(title, content):
             contents=prompt,
             config=types.GenerateContentConfig(
                 system_instruction=sys_instruction,
-                temperature=0.2  # क्रिएटिविटी कम ताकि निर्देशों का पालन पक्का हो
+                temperature=0.1  # कम क्रिएटिविटी ताकि निर्देशों का पक्का पालन हो
             )
         )
         return response.text
@@ -212,23 +218,24 @@ def generate_smc_grid(news_data, live_spot):
     
     context_payload = ""
     for idx, item in enumerate(news_data, 1):
-        context_payload += f"Headline {idx}: {item['title']}\n"
+        context_payload += f"News {idx}: {item['title']}\n"
         
-    prompt_main = f"Calculate trade levels for current spot price: ${live_spot:.2f} using context: {context_payload}"
+    prompt_main = f"Calculate technical SMC levels for Gold spot price: ${live_spot:.2f} based on this market context: {context_payload}"
     
     sys_instruction_main = (
-        "You are an expert SMC trader. Your output must be written entirely in Hindi script (Devanagari). "
-        "Format exactly like this:\n"
+        "You are a professional Smart Money Concepts (SMC) trader. You must generate the entire trading levels grid "
+        "and tactical action plan in Hindi script only. Do not use English words or sentences for descriptions. "
+        "Format exactly like this:\n\n"
         "### 📋 लाइव इंट्राडे मुख्य लेवल्स (SMC ग्रिड)\n"
-        "- **PDH:** [Level]\n"
-        "- **PDL:** [Level]\n"
-        "- **रेसिस्टेंस 1 (R1):** [Level]\n"
-        "- **सपोर्ट 1 (S1):** [Level]\n"
+        "- **PDH (पिछले दिन का हाई):** $[Calculate and print Level]\n"
+        "- **PDL (पिछले दिन का लो):** $[Calculate and print Level]\n"
+        "- **रेसिस्टेंस 1 (R1):** $[Calculate Level]\n"
+        "- **सपोर्ट 1 (S1):** $[Calculate Level]\n\n"
         "### 🎯 लाइव ट्रेड सेटअप (ऐक्शन प्लान)\n"
-        "- **आज का इंट्राडे झुकाव (Bias):** [Bias]\n"
-        "- **एंट्री ज़ोन (Entry Zone):** [Zone]\n"
-        "- **स्टॉप लॉस (SL):** [Level]\n"
-        "- **टारगेट 1 (TP1):** [Level]"
+        "- **आज का इंट्राडे झुकाव (Bias):** [तेजी (Bullish) / मंदी (Bearish) / न्यूट्रल]\n"
+        "- **एंट्री ज़ोन (Entry Zone):** $[Zone range based on numbers]\n"
+        "- **स्टॉप लॉस (SL):** $[Level]\n"
+        "- **टारगेट 1 (TP1):** $[Level]"
     )
     
     try:
@@ -283,13 +290,13 @@ with col2:
     if static_news:
         with st.spinner("जेमिनी प्रो इंजन लाइव लेवल्स और सभी खबरों का शुद्ध हिंदी विश्लेषण कैलकुलेट कर रहा है..."):
             
-            # 1. पहले मेन लेवल्स लोड करें
+            # 1. पहले मुख्य SMC लेवल्स और ऐक्शन प्लान लोड करें
             ai_main_output = generate_smc_grid(static_news, live_spot_value)
             st.markdown(f'<div class="ai-box-container">', unsafe_allow_html=True)
             st.markdown(ai_main_output)
             st.write("---")
             
-            # 2. हर न्यूज़ के लिए आइसोलेटेड कॉल हिंदी में
+            # 2. हर न्यूज़ का अलग से कड़ा हिंदी विश्लेषण पैनल
             st.markdown("### 🔍 AI News Interpreter & Market Impact Panel")
             
             for item in static_news:
