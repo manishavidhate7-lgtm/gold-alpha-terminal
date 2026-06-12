@@ -16,7 +16,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 🚨 हेडिंग्स का साइज छोटा करके सिर्फ बोल्ड रखने का CSS
+# हेडिंग्स का साइज छोटा करके सिर्फ बोल्ड रखने का CSS
 st.markdown("""
 <style>
     html, body, [data-testid="stAppViewContainer"] {
@@ -37,8 +37,8 @@ st.markdown("""
     .ai-box-container h1, .ai-box-container h2, .ai-box-container h3 {
         font-size: 15px !important;
         font-weight: 800 !important;
-        margin-top: 10px !important;
-        margin-bottom: 5px !important;
+        margin-top: 12px !important;
+        margin-bottom: 6px !important;
         color: #1e293b !important;
     }
     
@@ -172,7 +172,7 @@ with top_col2:
 st.write("---")
 
 # =====================================================================
-# 6. AI TRADER ENGINE & DYNAMIC NEWS INTERPRETER (FIXED FALLBACK)
+# 6. AI TRADER ENGINE & DYNAMIC NEWS INTERPRETER
 # =====================================================================
 @st.cache_data(ttl=1800)
 def generate_pro_ai_analysis(news_data, live_spot):
@@ -251,22 +251,25 @@ def generate_pro_ai_analysis(news_data, live_spot):
 - **Take Profit 1 (TP1):** {live_spot - 10:.2f}
         """
         
-        # 🚨 फॉलबैक स्ट्रक्चर को पूरी तरह ठीक किया ताकि एक-एक लाइन साफ रेंडर हो
-        fallback_interp = "### 🔍 AI News Interpreter & Market Impact Panel (Dynamic Flow)\n\n"
+        # 🚨 यहाँ फॉलबैक स्ट्रक्चर को पूरी तरह से फुल-प्रूफ एरे (List) में बदल दिया है
+        fallback_blocks = []
         for item in news_data[:5]:
             is_high = "High" in item["impact"]
             gold_imp = "📉 BEARISH (मंदी) - डॉलर मजबूत होने से सोने के दाम गिर सकते हैं।" if is_high else "🚀 BULLISH (तेजी) - सोने में खरीदार एक्टिव हो सकते हैं।"
             pairs_imp = "🚀 USDJPY BULLISH (डॉलर मजबूत) | 📉 EURUSD BEARISH (यूरो कमजोर)" if is_high else "📉 USDJPY BEARISH (येन मजबूत) | 🚀 GBPUSD BULLISH"
             nifty_imp = "📉 BEARISH (मंदी) - भारतीय बाज़ारों में थोड़ी गिरावट आ सकती है।" if is_high else "⚪ NEUTRAL (कोई खास असर नहीं)।"
             
-            fallback_interp += f"**📌 न्यूज़ हेडलाइन:** {item['title']}\n"
-            fallback_interp += f"- **आसान शब्दों में मतलब:** वैश्विक स्तर पर मैक्रो लिक्विडिटी और सेंट्रल बैंक की नीतियों से जुड़ा हुआ मुख्य अपडेट।\n"
-            fallback_interp += f"- **Forex (Gold/Dollar) पर असर:** {gold_imp}\n"
-            fallback_interp += f"- **Other Major Pairs पर असर:** {pairs_imp}\n"
-            fallback_interp += f"- **Indian Market (Nifty) पर असर:** {nifty_imp}\n"
-            fallback_interp += f"- **असर का लेवल (Impact Level):** {item['impact']}\n\n"
-            fallback_interp += "---\n\n"
+            block = f"""**📌 न्यूज़ हेडलाइन:** {str(item['title'])}
+* **आसान शब्दों में मतलब:** वैश्विक स्तर पर मैक्रो लिक्विडिटी और सेंट्रल बैंक की नीतियों से जुड़ा हुआ मुख्य अपडेट।
+* **Forex (Gold/Dollar) पर असर:** {gold_imp}
+* **Other Major Pairs पर असर:** {pairs_imp}
+* **Indian Market (Nifty) पर असर:** {nifty_imp}
+* **असर का लेवल (Impact Level):** {str(item['impact'])}
+
+---"""
+            fallback_blocks.append(block)
             
+        fallback_interp = "### 🔍 AI News Interpreter & Market Impact Panel (Dynamic Flow)\n\n" + "\n\n".join(fallback_blocks)
         return fallback_main, fallback_interp
 
 # =====================================================================
@@ -303,15 +306,20 @@ with col2:
     static_news = fetch_gold_news()
     
     if not client:
-        st.warning("⚠️ सर्ver तिजोरी (Secrets) में 'GEMINI_API_KEY' डालना बाकी है।")
+        st.warning("⚠️ सर्वर तिजोरी (Secrets) में 'GEMINI_API_KEY' डालना बाकी है।")
     
     if static_news:
         with st.spinner("जेमिनी प्रो इंजन लाइव लेवल्स और सभी 5 खबरों का डीप विश्लेषण कैलकुलेट कर रहा है..."):
             ai_main_output, ai_interpreter_output = generate_pro_ai_analysis(static_news, live_spot_value)
             
             st.markdown(f'<div class="ai-box-container">', unsafe_allow_html=True)
+            
+            # मेन आउटपुट रेंडर
             st.markdown(ai_main_output)
             st.write("---")
+            
+            # इंटरप्रिटेशन आउटपुट को एकदम क्लीन मार्कडाउन ब्लॉक में रेंडर कर रहे हैं
             with st.container(border=True):
                 st.markdown(ai_interpreter_output)
+                
             st.markdown('</div>', unsafe_allow_html=True)
