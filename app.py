@@ -2,41 +2,63 @@ import streamlit as st
 import feedparser
 from google.genai import Client
 from deep_translator import GoogleTranslator
+from bs4 import BeautifulSoup
 
-st.title("XAU/USD Alpha Terminal")
+st.set_page_config(layout="wide")
 
-# 1. API Client setup
+# --- 1. Client Setup ---
 def get_client():
     try:
-        # यहाँ 'GEMINI_API_KEY' वही नाम है जो आपने Streamlit Secrets में रखा है
         return Client(api_key=st.secrets["GEMINI_API_KEY"])
-    except Exception as e:
-        st.error(f"API Key Error: {e}")
+    except:
         return None
 
 client = get_client()
 
-# 2. News
-feed = feedparser.parse("https://finance.yahoo.com/rss/headline?s=GC=F")
-
-# 3. Process
-for item in feed.entries[:3]:
-    # ट्रांसलेट हेडलाइन
+# --- 2. News Fetching ---
+@st.cache_data(ttl=60)
+def fetch_news():
     try:
-        title_hi = GoogleTranslator(source='auto', target='hi').translate(item.title)
+        feed = feedparser.parse("https://finance.yahoo.com/rss/headline?s=GC=F")
+        return feed.entries[:3]
     except:
-        title_hi = item.title
-    
-    st.subheader(title_hi)
+        return []
 
+# --- 3. Translation Helper ---
+def safe_translate(text):
+    try:
+        return GoogleTranslator(source='auto', target='hi').translate(text[:300])
+    except:
+        return text
+
+# --- 4. Dashboard UI ---
+st.title("XAU/USD Alpha Terminal")
+
+col1, col2 = st.columns([1, 1])
+
+# Column 1: News List (Always visible)
+with col1:
+    st.header("📰 News Flow")
+    news = fetch_news()
+    for item in news:
+        with st.container(border=True):
+            st.markdown(f"**{safe_translate(item.title)}**")
+            st.caption(safe_translate(BeautifulSoup(item.summary, "html.parser").get_text()))
+
+# Column 2: AI Desk (Logic)
+with col2:
+    st.header("🤖 AI Analysis & Bias")
     if client:
         try:
-            # हम मॉडल को 'gemini-1.5-flash' इस्तेमाल करते हैं, यह सबसे स्टेबल है
+            # Full prompt for Bias and Analysis
+            prompt = "Analyze XAUUSD market bias (Bullish/Bearish) and provide 3 key points based on the latest news. Answer in Hindi."
             response = client.models.generate_content(
                 model='gemini-1.5-flash', 
-                contents=f"Summarize in 2 short hindi lines: {item.title}"
+                contents=prompt
             )
-            st.write(response.text)
+            st.success("Market Bias: Active")
+            st.markdown(response.text)
         except Exception as e:
-            st.write("एआई अभी लोड नहीं हो रहा, की (Key) चेक करें।")
-    st.divider()
+            st.error("AI Analysis failed. Check API Key permissions.")
+    else:
+        st.warning("API Key missing. Please check Streamlit Secrets.")
