@@ -8,7 +8,7 @@ import json
 import google.genai as genai
 
 # =====================================================================
-# 1. PAGE SETUP & FIX TEXT COLOR FOR MOBILE
+# 1. PAGE SETUP & COMPLETE TEXT COLOR FIX (NEWS + AI DESK)
 # =====================================================================
 st.set_page_config(
     page_title="XAUUSD Alpha Terminal v2", 
@@ -16,20 +16,27 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 🚨 यहाँ हमने ज़बरदस्ती टेक्स्ट का रंग गहरा काला फिक्स कर दिया है ताकि मोबाइल पर गायब न हो
+# 🚨 न्यूज़ और एआई डेस्क दोनों के टेक्स्ट का रंग ज़बरदस्ती गहरा काला फिक्स कर दिया है
 st.markdown("""
 <style>
     html, body, [data-testid="stAppViewContainer"] {
         background-color: #fafbfc;
     }
     
-    /* न्यूज़ कार्ड और टेक्स्ट का कलर फिक्स */
+    /* 1. न्यूज़ सेक्शन और जनरल टेक्स्ट कलर फिक्स */
     [data-testid="stContentBlock"] h1, 
     [data-testid="stContentBlock"] h2, 
     [data-testid="stContentBlock"] h3, 
     [data-testid="stContentBlock"] p,
     .stMarkdown p, .stMarkdown h3 {
-        color: #1e293b !important; /* गहरा सॉलिड काला रंग */
+        color: #1e293b !important;
+    }
+    
+    /* 2. एआई डेस्क (Markdown Elements) का रंग पूरी तरह फिक्स */
+    .ai-box-container, .ai-box-container p, .ai-box-container li, 
+    .ai-box-container h1, .ai-box-container h2, .ai-box-container h3, 
+    .ai-box-container strong, .ai-box-container span {
+        color: #1e293b !important;
     }
     
     /* एसएमसी लेवल्स के कार्ड्स */
@@ -52,7 +59,6 @@ st.markdown("""
     .sell-text { color: #f23645; font-weight: 800; font-size: 16px; }
     .neutral-text { color: #64748b; font-weight: 800; font-size: 16px; }
     
-    /* मोबाइल स्क्रीन पर कॉलम्स को ऑटो-स्टैक करने का सेफ तरीका */
     @media (max-width: 768px) {
         .block-container {
             padding-top: 1rem !important;
@@ -207,7 +213,7 @@ def generate_pro_ai_analysis(news_data, live_spot):
     - **Forex (Gold/Dollar) पर असर:** [🚀 BULLISH (तेजी) / 📉 BEARISH (मंदी) / ⚪ NEUTRAL - Simple Hindi explanation]
     - **Other Major Pairs पर असर:** [State specific pairs like USDJPY, EURUSD, or GBPUSD and mark them 🚀 BULLISH or 📉 BEARISH with a 1-line reason in simple Hindi]
     - **Indian Market (Nifty/Bank Nifty) पर असर:** [🚀 BULLISH (तेजी) / 📉 BEARISH (मंदी) / ⚪ NEUTRAL - Simple Hindi explanation]
-    - **असर काレベル (Impact Level):** [🔴 High / 🟡 Medium / 🟢 Low]
+    - **असर का लेवल (Impact Level):** [🔴 High / 🟡 Medium / 🟢 Low]
 
     ---
     (Generate exactly 5 blocks matching the 5 stories below)
@@ -242,7 +248,7 @@ def generate_pro_ai_analysis(news_data, live_spot):
             pairs_imp = "🚀 USDJPY BULLISH (डॉलर मजबूत) | 📉 EURUSD BEARISH (यूरो कमजोर)" if is_high else "📉 USDJPY BEARISH (येन मजबूत) | 🚀 GBPUSD BULLISH"
             nifty_imp = "📉 BEARISH (मंदी) - भारतीय बाज़ारों में थोड़ी गिरावट आ सकती है।" if is_high else "⚪ NEUTRAL (कोई खास असर नहीं)।"
             
-            fallback_interp += f"**📌 न्यूज़ हेडलाइन:** {item['title']}\n"
+            fallback_interp += f"**📌 न्यूज़ हेडライン:** {item['title']}\n"
             fallback_interp += f"- **आसान शब्दों में मतलब:** वैश्विक स्तर पर लिक्विडिटी और CENTRAL BANK की नीतियों से जुड़ा हुआ मुख्य अपडेट।\n"
             fallback_interp += f"- **Forex (Gold/Dollar) पर असर:** {gold_imp}\n"
             fallback_interp += f"- **Other Major Pairs पर असर:** {pairs_imp}\n"
@@ -252,7 +258,7 @@ def generate_pro_ai_analysis(news_data, live_spot):
         return fallback_main, fallback_interp
 
 # =====================================================================
-# 7. ORIGINAL DUAL-COLUMN LAYOUT (WITH AUTOMATIC MOBILE RESPONSIVENESS)
+# 7. RESPONSIVE DUAL-COLUMN LAYOUT
 # =====================================================================
 col1, col2 = st.columns([1, 1], gap="large")
 
@@ -291,8 +297,10 @@ with col2:
         with st.spinner("जेमिनी प्रो इंजन लाइव लेवल्स और सभी 5 खबरों का डीप विश्लेषण कैलकुलेट कर रहा है..."):
             ai_main_output, ai_interpreter_output = generate_pro_ai_analysis(static_news, live_spot_value)
             
+            # 🚨 यहाँ हमने AI आउटपुट को 'ai-box-container' के अंदर रैप कर दिया ताकि कलर फिक्स हो जाए
+            st.markdown(f'<div class="ai-box-container">', unsafe_allow_html=True)
             st.markdown(ai_main_output)
             st.write("---")
-            
             with st.container(border=True):
                 st.markdown(ai_interpreter_output)
+            st.markdown('</div>', unsafe_allow_html=True)
