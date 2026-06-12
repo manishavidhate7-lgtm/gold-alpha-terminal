@@ -1,5 +1,4 @@
-streamlit
-feedparser
-google-genai
-beautifulsoup4
+groq
 deep-translator
+feedparser
+beautifulsoup4
