@@ -9,15 +9,29 @@ st.set_page_config(page_title="Wolf Alpha Terminal | XAU/USD", layout="wide", in
 # 2. GROQ SETUP
 client = Groq(api_key="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")
 
-# 3. AI LOGIC
+# 3. AI LOGIC (English Output)
 def get_ai_analysis():
+    # Live Spot Price context
     spot_price = 4177.465 
     prompt = f"""
     Analyze XAUUSD current spot price: {spot_price}.
-    Return output in Hindi (Devanagari script) with:
-    1. Dynamic Intraday Key Levels (PDH, PDL, R1, S1) based on {spot_price}.
-    2. Live Trade Setup (Bias, Entry, SL, TP, RR).
-    3. AI News Interpreter with Bullish/Bearish impact.
+    Return output EXACTLY in English with the following structure:
+
+    ### 📋 Dynamic Intraday Key Levels (SMC Grid)
+    - **PDH (Previous Daily High):** [Calculate based on {spot_price}]
+    - **PDL (Previous Daily Low):** [Calculate based on {spot_price}]
+    - **R1 (Resistance 1):** [Calculate based on {spot_price}]
+    - **S1 (Support 1):** [Calculate based on {spot_price}]
+
+    ### 🎯 Live Trade Setup
+    - **Bias:** [Bullish/Bearish/Neutral]
+    - **Entry:** [Price]
+    - **Stop Loss (SL):** [Price]
+    - **Target Price (TP):** [Price]
+    - **Risk-to-Reward Ratio (RR):** [Ratio]
+
+    ### 🔍 AI News Interpreter
+    - Provide a brief market impact analysis in English.
     """
     try:
         completion = client.chat.completions.create(
@@ -45,8 +59,8 @@ with top1:
 
 with top2:
     st.markdown("### 📊 HTF Alignment Meters")
-    m1, m2, m3, m4 = st.columns(4)
     # border=True का इस्तेमाल किया है ताकि हर हाल में डिब्बा दिखे
+    m1, m2, m3, m4 = st.columns(4)
     with m1:
         with st.container(border=True):
             st.markdown("<div style='text-align:center'>5M<br><b style='color:red'>SELL</b></div>", unsafe_allow_html=True)
