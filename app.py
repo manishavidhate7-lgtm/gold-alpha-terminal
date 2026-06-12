@@ -8,7 +8,7 @@ import json
 import google.genai as genai
 
 # =====================================================================
-# 1. PAGE SETUP & FORCE SOLID BLACK FOR ALL TEXT ELEMENTS (LI, UL, H3)
+# 1. PAGE SETUP & AGGRESSIVE UI GAP REDUCTION & METERS CSS
 # =====================================================================
 st.set_page_config(
     page_title="XAUUSD Alpha Terminal v2", 
@@ -16,14 +16,34 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 🚨 यहाँ CSS को और आक्रामक (Aggressive) बना दिया है ताकि बुलेट पॉइंट्स (li) का रंग भी काला ही रहे
+# फालतू गैप्स हटाने और मीटर्स को कस्टमाइज़ करने का मास्टर CSS
 st.markdown("""
 <style>
+    /* पूरे ऐप का बैकग्राउंड और टॉप पैडिंग फिक्स */
     html, body, [data-testid="stAppViewContainer"] {
         background-color: #fafbfc !important;
     }
+    .block-container {
+        padding-top: 1rem !important;
+        padding-bottom: 0rem !important;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+        max-width: 98% !important;
+    }
     
-    /* सभी तरह के टेक्स्ट, पैराग्राफ, लिस्ट और हेडिंग्स को सॉलिड गहरा काला फिक्स करना */
+    /* स्ट्रीमलिट के डिफ़ॉल्ट एलिमेंट्स के बीच की गैप्स कम करना */
+    [data-testid="stVerticalBlock"] {
+        gap: 0.4rem !important;
+    }
+    [data-testid="stHorizontalBlock"] {
+        gap: 0.6rem !important;
+    }
+    div.stButton {
+        margin-top: -5px !important;
+        margin-bottom: 5px !important;
+    }
+    
+    /* सभी तरह के टेक्स्ट एलिमेंट्स का कलर फिक्स */
     [data-testid="stContentBlock"] h1, 
     [data-testid="stContentBlock"] h2, 
     [data-testid="stContentBlock"] h3, 
@@ -33,52 +53,67 @@ st.markdown("""
         color: #1e293b !important;
     }
     
-    /* एआई डेस्क के कंटेनर के अंदर मौजूद एक-एक लिस्ट आइटम (Bullet Points) का कलर फिक्स */
-    .ai-box-container, .ai-box-container p, .ai-box-container li, .ai-box-container ul,
-    .ai-box-container h1, .ai-box-container h2, .ai-box-container h3, 
-    .ai-box-container strong, .ai-box-container span {
+    /* एआई डेस्क कंटेनर और हेडिंग्स की टाइट स्पेसिंग */
+    .ai-box-container {
         color: #1e293b !important;
         font-size: 14px !important;
     }
-    
-    /* हेडिंग्स को छोटा और केवल बोल्ड रखने के लिए स्टाइल */
     .stMarkdown h1, .stMarkdown h2, .stMarkdown h3,
     .ai-box-container h1, .ai-box-container h2, .ai-box-container h3 {
-        font-size: 15px !important;
+        font-size: 14.5px !important;
         font-weight: 800 !important;
-        margin-top: 10px !important;
-        margin-bottom: 5px !important;
-        color: #1e293b !important;
+        margin-top: 6px !important;
+        margin-bottom: 3px !important;
+        line-height: 1.2 !important;
     }
     
-    /* एसएमसी लेवल्स के कार्ड्स */
-    .metric-card { 
+    /* एचटीएफ अलाइनमेंट मीटर कार्ड्स */
+    .meter-card { 
         background-color: #ffffff; 
-        padding: 12px; 
-        border-radius: 8px; 
+        padding: 8px 10px; 
+        border-radius: 6px; 
         border: 1px solid #e2e8f0; 
         text-align: center;
-        box-shadow: 0px 4px 6px -1px rgba(0, 0, 0, 0.05);
-        margin-bottom: 8px;
+        box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.03);
     }
     .timeframe-title {
-        font-size: 13px;
-        font-weight: bold;
-        color: #64748b;
-        margin-bottom: 3px;
+        font-size: 12px;
+        font-weight: 700;
+        color: #475569;
+        margin-bottom: 4px;
     }
-    .buy-text { color: #089981; font-weight: 800; font-size: 16px; }
-    .sell-text { color: #f23645; font-weight: 800; font-size: 16px; }
-    .neutral-text { color: #64748b; font-weight: 800; font-size: 16px; }
+    
+    /* कस्टम मीटर बार्स */
+    .meter-bar-bg {
+        background-color: #e2e8f0;
+        border-radius: 4px;
+        height: 6px;
+        width: 100%;
+        overflow: hidden;
+        margin-top: 5px;
+    }
+    .meter-fill-sell { background-color: #f23645; height: 100%; width: 85%; }
+    .meter-fill-buy { background-color: #089981; height: 100%; width: 90%; }
+    .meter-fill-neut { background-color: #94a3b8; height: 100%; width: 50%; }
+    
+    .buy-text { color: #089981; font-weight: 800; font-size: 13px; }
+    .sell-text { color: #f23645; font-weight: 800; font-size: 13px; }
+    .neutral-text { color: #64748b; font-weight: 800; font-size: 13px; }
+    
+    /* कंटेनर बॉक्स की पैडिंग कम करना */
+    [data-testid="stMetricContainer"] {
+        padding: 4px !important;
+    }
+    .st-emotion-cache-12w0qpk {
+        padding: 0.6rem !important;
+    }
     
     @media (max-width: 768px) {
         .block-container {
-            padding-top: 1rem !important;
-            padding-bottom: 1rem !important;
-            padding-left: 0.5rem !important;
-            padding-right: 0.5rem !important;
+            padding-left: 0.4rem !important;
+            padding-right: 0.4rem !important;
         }
-        iframe { height: 140px !important; }
+        iframe { height: 125px !important; }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -147,7 +182,7 @@ def fetch_gold_news():
     return news_items
 
 # =====================================================================
-# 5. TOP ROW: LIVE SPOT PRICE & HTF ALIGNMENT
+# 5. TOP ROW: LIVE SPOT PRICE & HTF ALIGNMENT WITH METERS
 # =====================================================================
 top_col1, top_col2 = st.columns([1, 1])
 
@@ -161,15 +196,21 @@ with top_col1:
       </script>
     </div>
     """
-    components.html(tv_ticker_html, height=140)
+    components.html(tv_ticker_html, height=130)
 
 with top_col2:
-    st.markdown("### 📊 HTF Alignment")
+    st.markdown("### 📊 HTF Alignment Meters")
     htf_cols = st.columns(4)
-    with htf_cols[0]: st.markdown('<div class="metric-card"><div class="timeframe-title">⏳ 5M</div><span class="sell-text">🔴 SELL</span></div>', unsafe_allow_html=True)
-    with htf_cols[1]: st.markdown('<div class="metric-card"><div class="timeframe-title">⏳ 15M</div><span class="sell-text">🔴 SELL</span></div>', unsafe_allow_html=True)
-    with htf_cols[2]: st.markdown('<div class="metric-card"><div class="timeframe-title">⏳ 1H</div><span class="neutral-text">⚪ NEUT</span></div>', unsafe_allow_html=True)
-    with htf_cols[3]: st.markdown('<div class="metric-card"><div class="timeframe-title">⏳ 4H</div><span class="buy-text">🟢 BUY</span></div>', unsafe_allow_html=True)
+    
+    # मीटर डिजाइन 5M से 4H टाइमफ्रेम के लिए
+    with htf_cols[0]: 
+        st.markdown('<div class="meter-card"><div class="timeframe-title">⏳ 5M</div><span class="sell-text">🔴 STRONG SELL</span><div class="meter-bar-bg"><div class="meter-fill-sell"></div></div></div>', unsafe_allow_html=True)
+    with htf_cols[1]: 
+        st.markdown('<div class="meter-card"><div class="timeframe-title">⏳ 15M</div><span class="sell-text">🔴 SELL</span><div class="meter-bar-bg"><div class="meter-fill-sell" style="width:65%;"></div></div></div>', unsafe_allow_html=True)
+    with htf_cols[2]: 
+        st.markdown('<div class="meter-card"><div class="timeframe-title">⏳ 1H</div><span class="neutral-text">⚪ NEUTRAL</span><div class="meter-bar-bg"><div class="meter-fill-neut"></div></div></div>', unsafe_allow_html=True)
+    with htf_cols[3]: 
+        st.markdown('<div class="meter-card"><div class="timeframe-title">⏳ 4H</div><span class="buy-text">🟢 BUY</span><div class="meter-bar-bg"><div class="meter-fill-buy"></div></div></div>', unsafe_allow_html=True)
 
 st.write("---")
 
@@ -260,7 +301,6 @@ def generate_pro_ai_analysis(news_data, live_spot):
             pairs_imp = "🚀 USDJPY BULLISH (डॉलर मजबूत) | 📉 EURUSD BEARISH (यूरो कमजोर)" if is_high else "📉 USDJPY BEARISH (येन मजबूत) | 🚀 GBPUSD BULLISH"
             nifty_imp = "📉 BEARISH (मंदी) - भारतीय बाज़ारों में थोड़ी गिरावट आ सकती है।" if is_high else "⚪ NEUTRAL (कोई खास असर नहीं)।"
             
-            # 🚨 यहाँ से बुलेट मार्क हटा दिए हैं ताकि स्ट्रीमलिट का डिफ़ॉल्ट सफ़ेद कलर ट्रिगर ही न हो
             block = f"""**📌 न्यूज़ हेडलाइन:** {str(item['title'])}
 आसान शब्दों में मतलब: वैश्विक स्तर पर मैक्रो लिक्विडिटी और सेंट्रल बैंक की नीतियों से जुड़ा हुआ मुख्य अपडेट।
 Forex (Gold/Dollar) पर असर: {gold_imp}
@@ -275,9 +315,9 @@ Indian Market (Nifty) पर असर: {nifty_imp}
         return fallback_main, fallback_interp
 
 # =====================================================================
-# 7. RESPONSIVE DUAL-COLUMN LAYOUT
+# 7. RESPONSIVE DUAL-COLUMN LAYOUT (COMPACT & CLEAN)
 # =====================================================================
-col1, col2 = st.columns([1, 1], gap="large")
+col1, col2 = st.columns([1, 1], gap="medium")
 
 with col1:
     st.header("📰 Live Alpha News Flow")
@@ -289,7 +329,6 @@ with col1:
         
         for item in current_news:
             with st.container(border=True):
-                # 🚨 st.subheader हटाकर सीधे मूनमार्कडाउन फिक्स किया ताकि न्यूज़ टाइटल गायब न हो
                 st.markdown(f"**📢 {item['title']}**")
                 st.caption(f"📅 {item['published']}")
                 st.markdown(f"**Context:** {item['summary']}")
