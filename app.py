@@ -28,18 +28,11 @@ with col_l:
 
 with col_r:
     st.markdown("### 📊 Market Technical Trend")
-    # Iframe फिक्स: यह अब हमेशा लोड होगा
     components.html("""
     <iframe src="https://www.tradingview.com/embed-widget/technical-analysis/?symbol=OANDA:XAUUSD&interval=15m&theme=light" width="100%" height="400" frameborder="0"></iframe>
     """, height=420)
 
-# 4. HEATMAP
-st.markdown("### 🗺️ Currency Strength Heatmap")
-components.html("""
-<iframe src="https://www.tradingview.com/embed-widget/forex-heat-map/?locale=en&currencies=EUR,USD,JPY,GBP,CHF,AUD,CAD,NZD,INR&isTransparent=false&colorTheme=light" width="100%" height="400" frameborder="0"></iframe>
-""", height=420)
-
-# 5. NEWS SECTION
+# 4. NEWS SECTION
 st.header("📰 Live Market News & AI Analyser")
 sources = ["https://www.investing.com/rss/news_14.rss", "https://www.fxstreet.com/rss"]
 
