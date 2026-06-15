@@ -1,21 +1,31 @@
 import streamlit as st
 import streamlit.components.v1 as components
 import feedparser
+import os
 from groq import Groq
 
 # 1. PAGE CONFIG
 st.set_page_config(page_title="Wolf Alpha Pro Terminal", layout="wide")
 st.title("⚡ Wolf Alpha Pro Terminal | Live")
 
-# 2. AI ANALYZER
-client = Groq(api_key="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")
+# 2. AI ANALYZER SETUP
+# सुनिश्चित करें कि स्ट्रीमलिट Secrets में GROQ_API_KEY सेट है
+api_key = st.secrets.get("GROQ_API_KEY") 
+client = Groq(api_key=api_key) if api_key else None
 
 def get_single_news_impact(news_title):
+    if not client:
+        return "Error: API Key missing in Secrets."
+    
     prompt = f"Analyze: '{news_title}'. Impact on XAU/USD (High/Med/Low) + Reasoning."
     try:
-        completion = client.chat.completions.create(model="llama-3.3-70b-versatile", messages=[{"role": "user", "content": prompt}])
+        completion = client.chat.completions.create(
+            model="llama-3.3-70b-versatile", 
+            messages=[{"role": "user", "content": prompt}]
+        )
         return completion.choices[0].message.content
-    except: return "AI Analysis unavailable."
+    except Exception as e:
+        return f"AI Error: {str(e)}" # यह आपको बताएगा कि 'Rate limit' है या 'Invalid key'
 
 # 3. LAYOUT
 col_l, col_r = st.columns([2, 1])
